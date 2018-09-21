@@ -13,7 +13,7 @@ type Node struct {
 	MaxActive int
 }
 
-func (n *Node) newNode(addr string) (err error) {
+func (n *Node) NewNode(addr string) (err error) {
 	n.addr = addr
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", addr)
 	if err != nil {

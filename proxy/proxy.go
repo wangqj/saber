@@ -15,6 +15,11 @@ type Proxy struct {
 	}
 }
 
+func NewProxy() *Proxy {
+
+	return nil
+}
+
 //启动proxy
 func (p *Proxy) Start(o *utils.Option) {
 
@@ -53,7 +58,6 @@ func handle(conn net.Conn) {
 	//resp
 
 	//slot
-	FindSlot("")
 
 	//判断slot状态，做处理
 

@@ -1,4 +1,4 @@
-package redisz
+package proxy
 
 func encode(s string) {
 

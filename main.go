@@ -17,12 +17,15 @@ func main() {
 	//ip port
 	o := utils.LoadConf()
 	//读取registry配置
-	registry.LoadNodes()
-	registry.LoadSlots()
-	//初始化TODO
+	e := registry.NewEtcdx(o)
 
+	//初始化TODO
+	r := proxy.Redisz{}
+	e.LoadNodes(&r)
+	e.LoadSlots(&r)
 	//启动服务TODO
-	proxy.Proxy{}.Start(o)
+	p := proxy.NewProxy(o, &r)
+	p.Start()
 
 	t2 := time.Since(t1)
 	log.WithFields(log.Fields{"Spend time": t2,}).Info("Successful startup!")

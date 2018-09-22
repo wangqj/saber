@@ -1,14 +1,15 @@
 package utils
 
 type Option struct {
-	port         int
-	ncpu         int
-	registryAdrr string
+	Port         int
+	NCPU         int
+	RegistryAdrr string
 }
 
 //读取本地配置文件
 
-func LoadConf() (o *Option) {
-
-	return nil
+func LoadConf() (*Option) {
+	o := &Option{}
+	o.RegistryAdrr = "127.0.0.1:2379"
+	return o
 }

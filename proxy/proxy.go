@@ -2,26 +2,30 @@ package proxy
 
 import (
 	"net"
-	"rocket/redisy"
 	"time"
 	log "github.com/sirupsen/logrus"
-	"saber/utils"
 	"os"
+	"saber/utils"
 )
 
 type Proxy struct {
+	redisz *Redisz
+	status int
 	exit struct {
 		C chan struct{}
 	}
 }
 
-func NewProxy() *Proxy {
-
-	return nil
+func NewProxy(o *utils.Option, r *Redisz) *Proxy {
+	s := &Proxy{}
+	s.redisz = r
+	s.status = 1
+	s.exit.C = make(chan struct{})
+	return s
 }
 
 //启动proxy
-func (p *Proxy) Start(o *utils.Option) {
+func (p *Proxy) Start() {
 
 	eh := make(chan error, 1)
 
@@ -31,8 +35,7 @@ func (p *Proxy) Start(o *utils.Option) {
 	//log.Println("listen port :" + strconv.Itoa(c.port))
 	defer netListen.Close()
 	log.Println("Waiting for clients")
-	rz := redisy.Redisz{}
-	rz.Init()
+
 	for {
 		conn, err := netListen.Accept()
 		if err != nil {

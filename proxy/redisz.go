@@ -1,12 +1,8 @@
-package redisz
-
-import (
-	"saber/proxy"
-)
+package proxy
 
 type Redisz struct {
-	Nodes []*proxy.Node
-	Slots []*proxy.Slot
+	Nodes []*Node
+	Slots []*Slot
 }
 
 func (ns *Redisz) get(k string) interface{} {

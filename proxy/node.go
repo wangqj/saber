@@ -6,26 +6,35 @@ import (
 )
 
 type Node struct {
-	addr      string
+	ID        string
+	Addr      string
 	conn      net.Conn
-	status    int
+	Status    int
 	MaxIdle   int
 	MaxActive int
 }
 
 func (n *Node) NewNode(addr string) (err error) {
-	n.addr = addr
+	n.ID = generateID()
+	n.Addr = addr
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", addr)
 	if err != nil {
 		return err
 	}
 	n.conn, err = net.DialTCP("tcp", nil, tcpAddr)
 	if err != nil {
-		n.status = 0
+		n.Status = 0
 		return err
 	} else {
-		n.status = 1
+		n.Status = 1
 	}
 	log.Println("add redis success ", addr)
 	return nil
+}
+
+/**
+	根据。。。生成ID TODO
+ */
+func generateID() string {
+	return "1"
 }

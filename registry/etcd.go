@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 )
 
+const SLOT_COUNT int = 16
+
 type Etcdx struct {
 	cli *clientv3.Client
 }
@@ -54,6 +56,12 @@ func (e *Etcdx) LoadNodes(r *proxy.Redisz) {
 }
 
 func (e *Etcdx) LoadSlots(r *proxy.Redisz) {
+	//TODO
+	for i := 0; i < 1024; i++ {
+		s := proxy.NewSlot(i, r.Nodes[i%len(r.Nodes)])
+		r.Slots = append(r.Slots, s)
+	}
+
 	//设置1秒超时，访问etcd有超时控制
 	//ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	//resp, err := e.cli.Get(ctx, "/saber/slots/")
@@ -67,16 +75,6 @@ func (e *Etcdx) LoadSlots(r *proxy.Redisz) {
 	//	//TODO
 	//}
 }
-
-//func exist(cli *clientv3.Client,key string)  {
-//	log.Println("获取值")
-//	if resp, err := cli.Get(context.TODO(), key); err != nil {
-//		log.Fatal(err)
-//	} else {
-//		log.Println("resp: ", resp)
-//		resp.Kvs
-//	}
-//}
 
 func (e *Etcdx) Close() {
 	e.cli.Close()

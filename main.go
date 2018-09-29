@@ -23,6 +23,7 @@ func main() {
 	r := proxy.Redisz{}
 	e.LoadNodes(&r)
 	e.LoadSlots(&r)
+	log.Println("slot count :", len(r.Slots))
 	//启动服务TODO
 	p := proxy.NewProxy(o, &r)
 	p.Start()

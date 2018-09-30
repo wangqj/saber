@@ -30,8 +30,11 @@ func (p *Proxy) Start() {
 	eh := make(chan error, 1)
 
 	//建立socket，监听端口
-	netListen, err := net.Listen("tcp", "localhost:6379")
-	CheckError(err)
+	netListen, err := net.Listen("tcp", "localhost:16379")
+	if err != nil {
+		log.Println(os.Stderr, "Fatal error: %s", err.Error())
+		os.Exit(1)
+	}
 	//log.Println("listen port :" + strconv.Itoa(c.port))
 	defer netListen.Close()
 	log.Println("Waiting for clients")
@@ -47,7 +50,7 @@ func (p *Proxy) Start() {
 		defer func() {
 			eh <- err
 		}()
-		go handle(conn)
+		go handle(conn, p.redisz)
 	}
 	select {
 	case <-p.exit.C:
@@ -57,21 +60,41 @@ func (p *Proxy) Start() {
 	}
 }
 
-func handle(conn net.Conn) {
+func handle(proxyConn net.Conn, redisz *Redisz) {
+	log.Println("handle request")
+	proxyBuffer := make([]byte, 2048)
+	proxyConn.Read(proxyBuffer)
 	//resp
 
 	//slot
+	s := redisz.GetSlot("")
 
-	//判断slot状态，做处理
-
+	//判断slot状态，
+	CheckSlot(s)
 	//转发到redis
-
-	//返回结果
-}
-
-func CheckError(err error) {
-	if err != nil {
-		log.Println(os.Stderr, "Fatal error: %s", err.Error())
-		os.Exit(1)
+	s.node.conn.Write(proxyBuffer)
+	redisBuffer := make([]byte, 2048)
+	re, readerr := s.node.conn.Read(redisBuffer)
+	if readerr != nil {
+		log.Errorln("read redis error: %s", readerr.Error())
 	}
+	log.Println("get result ", string(redisBuffer[:re]))
+	//返回结果
+	proxyConn.Write(redisBuffer)
 }
+
+func CheckSlot(s *Slot) {
+
+	switch {
+	case s.status == MIGRATE:
+		log.Println("MIGRATE")
+	case s.status == OFFLINE:
+		log.Println("OFFLINE")
+	case s.status == ONLINE:
+		log.Println("ONLINE")
+
+	}
+
+}
+
+

@@ -6,7 +6,7 @@ type Option struct {
 	RegistryAdrr string
 }
 
-//读取本地配置文件
+//读取本地配置文件TODO
 
 func LoadConf() (*Option) {
 	o := &Option{}

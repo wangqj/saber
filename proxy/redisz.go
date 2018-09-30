@@ -7,6 +7,6 @@ type Redisz struct {
 	Slots []*Slot
 }
 
-func (rz *Redisz) get(k string) interface{} {
+func (rz *Redisz) GetSlot(k string) *Slot {
 	return rz.Slots[utils.HashCode(k)%1024]
 }

@@ -35,10 +35,8 @@ func TestEtcdx_AddNode(t *testing.T) {
 	o := utils.LoadConf()
 	ex := NewEtcdx(o)
 	defer ex.Close()
-	n := proxy.Node{
-	}
-	n.NewNode("127.0.0.1:6379")
-	ex.AddNode(n)
+	n, e := proxy.NewNode("127.0.0.1:6379")
+	ex.AddNode(*n)
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
 	r, e := ex.cli.Get(ctx, "/saber/nodes/"+n.ID)
 	fmt.Println(r, e)

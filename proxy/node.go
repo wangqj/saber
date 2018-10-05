@@ -22,28 +22,28 @@ type NodeStore struct {
 	MaxActive int
 }
 
-func NewNode(addr string) (*Node, error) {
-	n := Node{}
-	n.ID = generateID()
-	n.Addr = addr
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", addr)
+func (n *Node) BuildConn() (error) {
+	tcpAddr, err := net.ResolveTCPAddr("tcp4", n.Addr)
 	if err != nil {
 		log.Errorln("ResolveTCPAddr ", err)
-		return nil, err
+		return err
 	}
 	n.conn, err = net.DialTCP("tcp", nil, tcpAddr)
 	if err != nil {
 		n.Status = 0
 		log.Errorln("DialTCP ", err)
-		return nil, err
+		return err
 	} else {
 		n.Status = 1
 	}
-	//TODO,先写死默认值
-	n.MaxIdle = 10
-	n.MaxActive = 5
-	log.Println("add redis node success ", addr)
-	return &n, nil
+	if n.MaxIdle == 0 {
+		n.MaxIdle = 10
+	}
+	if n.MaxActive == 0 {
+		n.MaxActive = 5
+	}
+	log.Println("add redis node success ", n.Addr)
+	return nil
 }
 
 /**

@@ -55,12 +55,13 @@ func (e *Etcdx) LoadNodes(r *proxy.Redisz) {
 			log.Println("json unmarshal failed, err:", err)
 		}
 		log.Println("Addr=", p.Addr)
-		n, err := proxy.NewNode(string(p.Addr))
+		p.BuildConn()
+		//n, err := proxy.NewNode(string(p.Addr))
 
 		if err != nil {
 			log.Println("init node failed, err:", err)
 		} else {
-			r.Nodes = append(r.Nodes, n)
+			r.Nodes = append(r.Nodes, &p)
 		}
 	}
 }

@@ -1,9 +1,9 @@
 package proxy
 
-func encode(s string) {
+func Encode(s string) {
 
 }
 
-func decode(b []byte) {
+func Decode(b []byte) {
 
 }

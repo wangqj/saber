@@ -64,6 +64,7 @@ func handle(proxyConn net.Conn, redisz *Redisz) {
 	log.Println("handle request")
 	proxyBuffer := make([]byte, 2048)
 	proxyConn.Read(proxyBuffer)
+	log.Println("request content is %s", proxyBuffer)
 	//resp
 
 	//slot
@@ -83,6 +84,7 @@ func handle(proxyConn net.Conn, redisz *Redisz) {
 	proxyConn.Write(redisBuffer)
 }
 
+//TODO
 func CheckSlot(s *Slot) {
 
 	switch {

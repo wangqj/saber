@@ -11,5 +11,6 @@ type Option struct {
 func LoadConf() (*Option) {
 	o := &Option{}
 	o.RegistryAdrr = "127.0.0.1:2379"
+	o.Port = 16379
 	return o
 }

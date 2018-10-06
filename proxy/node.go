@@ -42,7 +42,7 @@ func (n *Node) BuildConn() (error) {
 	if n.MaxActive == 0 {
 		n.MaxActive = 5
 	}
-	log.Println("add redis node success ", n.Addr)
+	log.Println("get redis conn success ", n.Addr)
 	return nil
 }
 

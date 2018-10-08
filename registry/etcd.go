@@ -14,6 +14,7 @@ const SLOT_COUNT int = 16
 
 type Etcdx struct {
 	cli *clientv3.Client
+
 }
 
 func NewEtcdx(o *utils.Option) *Etcdx {
@@ -55,14 +56,19 @@ func (e *Etcdx) LoadNodes(r *proxy.Redisz) {
 			log.Println("json unmarshal failed, err:", err)
 		}
 		log.Println("Addr=", p.Addr)
-		p.BuildConn()
-		//n, err := proxy.NewNode(string(p.Addr))
+		if p.Status == 1 {
+			p.BuildConn()
+			//n, err := proxy.NewNode(string(p.Addr))
 
-		if err != nil {
-			log.Println("init node failed, err:", err)
+			if err != nil {
+				log.Println("init node failed, err:", err)
+			} else {
+				r.Nodes = append(r.Nodes, &p)
+			}
 		} else {
-			r.Nodes = append(r.Nodes, &p)
+			log.Println("this node status is :", p.Status)
 		}
+
 	}
 }
 
@@ -104,4 +110,8 @@ func (e *Etcdx) AddNode(n proxy.Node) {
 			log.Println(resp)
 		}
 	}
+}
+
+func RegProxy() {
+
 }

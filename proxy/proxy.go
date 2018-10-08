@@ -7,6 +7,8 @@ import (
 	"os"
 	"saber/utils"
 	"strconv"
+	"sync"
+	"bytes"
 )
 
 type Proxy struct {
@@ -16,6 +18,7 @@ type Proxy struct {
 	exit struct {
 		C chan struct{}
 	}
+	mu sync.Mutex
 }
 
 func NewProxy(o *utils.Option, r *Redisz) *Proxy {
@@ -29,7 +32,8 @@ func NewProxy(o *utils.Option, r *Redisz) *Proxy {
 
 //启动proxy
 func (p *Proxy) Start(t time.Time) {
-
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	eh := make(chan error, 1)
 
 	//建立socket，监听端口
@@ -67,22 +71,32 @@ func handle(proxyConn net.Conn, redisz *Redisz) {
 	log.Println("handle request")
 	proxyBuffer := make([]byte, 2048)
 	proxyConn.Read(proxyBuffer)
-	log.Println("request content is %s", proxyBuffer)
-	//resp
+	proxyBuffer = bytes.TrimRight(proxyBuffer, "\x00")
+	log.Println("request content is %s", string(proxyBuffer))
 
+	//resp
+	r2 := bytes.NewReader(proxyBuffer)
+
+	data, err := ReadCommand(r2)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println(data)
 	//slot
 	s := redisz.GetSlot("")
-
-	//判断slot状态，
-	CheckSlot(s)
+	//
+	////判断slot状态，
+	//CheckSlot(s)
 	//转发到redis
-	s.node.conn.Write(proxyBuffer)
+	pool, err := s.node.pool.Acquire()
+	pool.GetConn().Write(proxyBuffer)
+	//s.node.conn.Write(proxyBuffer)
 	redisBuffer := make([]byte, 2048)
-	re, readerr := s.node.conn.Read(redisBuffer)
+	re, readerr := pool.GetConn().Read(redisBuffer)
 	if readerr != nil {
 		log.Errorln("read redis error: %s", readerr.Error())
 	}
-	log.Println("get result ", string(redisBuffer[:re]))
+	log.Println("get result ", string(redisBuffer[:re]), "---------------", "request content is %s", string(proxyBuffer))
 	//返回结果
 	proxyConn.Write(redisBuffer)
 }

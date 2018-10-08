@@ -38,7 +38,7 @@ func TestEtcdx_AddNode(t *testing.T) {
 	n := proxy.Node{
 		ID:        "11",
 		Addr:      "127.0.0.1:6379",
-		Status:    1,
+		Status:    0,
 		MaxIdle:   10,
 		MaxActive: 3,
 	}

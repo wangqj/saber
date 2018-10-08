@@ -49,6 +49,6 @@ func sender(conn net.Conn, content string) {
 	conn.Write(b)
 	buffer := make([]byte, 2048)
 	_, eer := conn.Read(buffer);
-	//bytes.Trim(buffer,"\x00")
+	bytes.Trim(buffer, " ")
 	fmt.Println("send over ", string(buffer), content, eer)
 }

@@ -35,6 +35,8 @@ type GenericPool struct {
 	maxOpen     int  // 池中最大资源数
 	numOpen     int  // 当前池中资源数
 	minOpen     int  // 池中最少资源数
+	used        int  // 被使用数量
+	maxIdle     int  // 最大空闲数量
 	closed      bool // 池是否已关闭
 	maxLifetime time.Duration
 	factory     factory // 创建连接的方法

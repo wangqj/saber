@@ -89,10 +89,12 @@ func handle(proxyConn net.Conn, redisz *Redisz) {
 	//CheckSlot(s)
 	//转发到redis
 	pool, err := s.node.pool.Acquire()
-	pool.GetConn().Write(proxyBuffer)
+	defer s.node.pool.Release(pool)
+	c := pool.GetConn()
+	c.Write(proxyBuffer)
 	//s.node.conn.Write(proxyBuffer)
 	redisBuffer := make([]byte, 2048)
-	re, readerr := pool.GetConn().Read(redisBuffer)
+	re, readerr := c.Read(redisBuffer)
 	if readerr != nil {
 		log.Errorln("read redis error: %s", readerr.Error())
 	}

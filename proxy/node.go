@@ -40,7 +40,13 @@ func init() {
 }
 
 func (n *Node) BuildConn() (error) {
-	p, err := utils.NewGenericPool(0, 10, time.Minute*10, func() (utils.Poolable, error) {
+	if n.MaxIdle == 0 {
+		n.MaxIdle = 10
+	}
+	if n.MaxActive == 0 {
+		n.MaxActive = 5
+	}
+	p, err := utils.NewGenericPool(1, n.MaxActive, time.Minute*10, func() (utils.Poolable, error) {
 		tcpAddr, err := net.ResolveTCPAddr("tcp4", n.Addr)
 		if err != nil {
 			log.Errorln("ResolveTCPAddr ", err)
@@ -54,12 +60,6 @@ func (n *Node) BuildConn() (error) {
 
 		} else {
 			n.Status = 1
-		}
-		if n.MaxIdle == 0 {
-			n.MaxIdle = 10
-		}
-		if n.MaxActive == 0 {
-			n.MaxActive = 5
 		}
 		log.Println("get redis conn success ", n.Addr)
 		return &NodePool{Name: n.ID, Conn: c, activeAt: time.Now()}, nil

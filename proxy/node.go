@@ -46,24 +46,27 @@ func (n *Node) BuildConn() (error) {
 	if n.MaxActive == 0 {
 		n.MaxActive = 5
 	}
-	p, err := utils.NewGenericPool(1, n.MaxActive, time.Minute*10, func() (utils.Poolable, error) {
-		tcpAddr, err := net.ResolveTCPAddr("tcp4", n.Addr)
-		if err != nil {
-			log.Errorln("ResolveTCPAddr ", err)
-			return nil, err
-		}
-		c, err := net.DialTCP("tcp", nil, tcpAddr)
-		if err != nil {
-			n.Status = 0
-			log.Errorln("DialTCP ", err)
-			return nil, err
 
-		} else {
-			n.Status = 1
-		}
-		log.Println("get redis conn success ", n.Addr)
-		return &NodePool{Name: n.ID, Conn: c, activeAt: time.Now()}, nil
-	})
+	//factory 创建连接的方法
+	factory := func() (interface{}, error) { return net.Dial("tcp", n.Addr) }
+
+	//close 关闭连接的方法
+	close := func(v interface{}) error { return v.(net.Conn).Close() }
+
+	//ping 检测连接的方法
+	//ping := func(v interface{}) error { return nil }
+
+	//创建一个连接池： 初始化5，最大连接30
+	poolConfig := &utils.PoolConfig{
+		InitialCap: 5,
+		MaxCap:     30,
+		Factory:    factory,
+		Close:      close,
+		//Ping:       ping,
+		//连接最大空闲时间，超过该时间的连接 将会关闭，可避免空闲时连接EOF，自动失效的问题
+		IdleTimeout: 15 * time.Second,
+	}
+	p, err := utils.NewChannelPool(poolConfig)
 	if err != nil {
 		log.Errorln("NewGenericPool ", err)
 		return err

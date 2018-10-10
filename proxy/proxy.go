@@ -88,9 +88,10 @@ func handle(proxyConn net.Conn, redisz *Redisz) {
 	////判断slot状态，
 	//CheckSlot(s)
 	//转发到redis
-	pool, err := s.node.pool.Acquire()
-	defer s.node.pool.Release(pool)
-	c := pool.GetConn()
+	conn, err := s.node.pool.Get()
+	defer s.node.pool.Put(conn)
+	//c := pool.GetConn()
+	c := conn.(net.Conn)
 	c.Write(proxyBuffer)
 	//s.node.conn.Write(proxyBuffer)
 	redisBuffer := make([]byte, 2048)

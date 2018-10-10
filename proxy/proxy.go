@@ -44,7 +44,7 @@ func (p *Proxy) Start(t time.Time) {
 	}
 	defer netListen.Close()
 	t2 := time.Since(t)
-	log.WithFields(log.Fields{"Spend time": t2, "listen tcp ": p.addr,}).Info("Successful startup!")
+	log.WithFields(log.Fields{"Spend time": t2, "listen tcp ": p.addr,}).Info("Successful startup! pid=", os.Getpid())
 
 	for {
 		conn, err := netListen.Accept()
@@ -81,7 +81,14 @@ func handle(proxyConn net.Conn, redisz *Redisz) {
 	if err != nil {
 		log.Println(err)
 	}
+	log.Println("++++++++++++++++++++++++++")
 	log.Println(data)
+	log.Println(data.Args)
+	log.Println(data.Name())
+	log.Println(data.Value(0))
+	log.Println(data.Value(1))
+	log.Println(data.Format())
+	log.Println("++++++++++++++++++++++++++")
 	//slot
 	s := redisz.GetSlot("")
 	//

@@ -22,7 +22,7 @@ func main() {
 	//var list = []string{"set a 1"}
 	t := time.Now()
 	var list = []string{"get a"}
-	for j := 0; j < 100; j++ {
+	for j := 0; j < 1; j++ {
 
 	for i := 0; i < len(list); i++ {
 		conn, err := net.DialTCP("tcp", nil, tcpAddr)

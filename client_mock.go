@@ -18,8 +18,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	var list = []string{"set a 1", "get a", "set a 2", "get a"}
+	//var list = []string{"set a 1", "get a", "set a 2", "get a"}
 	//var list = []string{"set a 1"}
+	t := time.Now()
+	var list = []string{"get a"}
+	for j := 0; j < 100; j++ {
 
 	for i := 0; i < len(list); i++ {
 		conn, err := net.DialTCP("tcp", nil, tcpAddr)
@@ -31,6 +34,8 @@ func main() {
 		fmt.Println(i)
 		go sender(conn, list[i])
 	}
+	}
+	fmt.Println(time.Since(t))
 	time.Sleep(time.Duration(10000 * time.Second))
 }
 
@@ -49,6 +54,7 @@ func sender(conn net.Conn, content string) {
 	conn.Write(b)
 	buffer := make([]byte, 2048)
 	_, eer := conn.Read(buffer);
-	bytes.Trim(buffer, " ")
+	bytes.TrimSpace(buffer)
+	//bytes.Trim(buffer, " ")
 	fmt.Println("send over ", string(buffer), content, eer)
 }

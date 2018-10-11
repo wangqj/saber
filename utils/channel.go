@@ -10,6 +10,7 @@ import (
 
 // PoolConfig 连接池相关配置
 type PoolConfig struct {
+	Name string
 	//连接池中拥有的最小连接数
 	InitialCap int
 	//连接池中拥有的最大的连接数
@@ -26,6 +27,7 @@ type PoolConfig struct {
 
 //channelPool 存放连接信息
 type channelPool struct {
+	name        string
 	mu          sync.Mutex
 	conns       chan *idleConn
 	minCount    int
@@ -53,6 +55,7 @@ func NewChannelPool(poolConfig *PoolConfig) (Pool, error) {
 	}
 
 	c := &channelPool{
+		name:        poolConfig.Name,
 		conns:       make(chan *idleConn, poolConfig.MaxCap),
 		minCount:    poolConfig.InitialCap,
 		factory:     poolConfig.Factory,
@@ -99,7 +102,7 @@ func (c *channelPool) Get() (interface{}, error) {
 				return nil, ErrClosed
 			}
 			//判断是否超时，超时则丢弃
-			if timeout := c.idleTimeout; timeout > 0 {
+			if timeout := c.idleTimeout; timeout > 0 && len(conns) >= c.minCount {
 				if wrapConn.t.Add(timeout).Before(time.Now()) {
 					//丢弃并关闭该连接
 					c.Close(wrapConn.conn)
@@ -190,8 +193,8 @@ func (c *channelPool) Len() int {
 
 func report(c *channelPool) {
 	for {
-		time.Sleep(5 * time.Second)
-		log.Println("pool stat: current num is ", len(c.getConns()))
+		time.Sleep(10 * time.Second)
+		log.Println("pool stat:", c.name, ", current num is ", len(c.getConns()))
 	}
 
 }

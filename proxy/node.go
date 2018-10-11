@@ -17,24 +17,6 @@ type Node struct {
 	MaxActive int    `json:"MaxActive"`
 }
 
-type NodePool struct {
-	Name     string
-	Conn     net.Conn
-	activeAt time.Time
-}
-
-func (p *NodePool) GetActiveTime() time.Time {
-	return p.activeAt
-}
-func (p *NodePool) Close() error {
-	log.Println(p.Name, " closed")
-	p.Conn.Close()
-	return nil
-}
-func (p *NodePool) GetConn() net.Conn {
-	return p.Conn
-}
-
 func init() {
 	log.Println("init run!")
 }
@@ -58,6 +40,7 @@ func (n *Node) BuildConn() (error) {
 
 	//创建一个连接池： 初始化5，最大连接30
 	poolConfig := &utils.PoolConfig{
+		Name:       n.Addr,
 		InitialCap: 5,
 		MaxCap:     30,
 		Factory:    factory,

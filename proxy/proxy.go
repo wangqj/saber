@@ -81,26 +81,15 @@ func handle(proxyConn net.Conn, redisz *Redisz) {
 	if err != nil {
 		log.Println(err)
 	}
-	log.Println("++++++++++++++++++++++++++")
-	log.Println(data)
-	log.Println(data.Args)
-	log.Println(data.Name())
-	log.Println(data.Value(0))
-	log.Println(data.Value(1))
-	log.Println(data.Format())
-	log.Println("++++++++++++++++++++++++++")
 	//slot
-	s := redisz.GetSlot("")
-	//
+	s := redisz.GetSlot(data.Value(1))
 	////判断slot状态，
 	//CheckSlot(s)
 	//转发到redis
 	conn, err := s.node.pool.Get()
 	defer s.node.pool.Put(conn)
-	//c := pool.GetConn()
 	c := conn.(net.Conn)
 	c.Write(proxyBuffer)
-	//s.node.conn.Write(proxyBuffer)
 	redisBuffer := make([]byte, 2048)
 	re, readerr := c.Read(redisBuffer)
 	if readerr != nil {
@@ -109,6 +98,10 @@ func handle(proxyConn net.Conn, redisz *Redisz) {
 	log.Println("get result ", string(redisBuffer[:re]), "---------------", "request content is %s", string(proxyBuffer))
 	//返回结果
 	proxyConn.Write(redisBuffer)
+}
+
+func dispatch(redisz *Redisz, v string) {
+
 }
 
 //TODO

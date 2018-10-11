@@ -36,9 +36,9 @@ func TestEtcdx_AddNode(t *testing.T) {
 	ex := NewEtcdx(o)
 	defer ex.Close()
 	n := proxy.Node{
-		ID:        "11",
+		ID:        "1",
 		Addr:      "127.0.0.1:6379",
-		Status:    0,
+		Status:    1,
 		MaxIdle:   10,
 		MaxActive: 3,
 	}

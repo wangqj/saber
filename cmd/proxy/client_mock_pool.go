@@ -14,11 +14,12 @@ func main() {
 	pool := &redis.Pool{
 		// Other pool configuration not shown in this example.
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", "127.0.0.1:16379")
+			c, err := redis.Dial("tcp", "127.0.0.1:6381")
 			if err != nil {
 				log.Println("00000000", err)
 				return nil, err
 			}
+			redis.DialConnectTimeout(3 * time.Second)
 			return c, nil
 		},
 		MaxActive:       100,
@@ -34,33 +35,18 @@ func main() {
 		}
 	}()
 	for i := 0; i < 10000; i++ {
-		//go func(pool *redis.Pool,i int) {
+		go func(pool *redis.Pool, i int) {
 		wg.Add(1)
 		c := pool.Get()
 		// pool.Close()
-		fmt.Println("0--------", c, i)
+			defer c.Close()
 		r, e := c.Do("get", i)
-		r2, e2 := c.Do("get", i)
-		c.Do("get", i)
-		c.Do("get", i)
-		c.Do("get", i)
-		c.Do("get", i)
-		c.Do("get", i)
-		c.Do("get", i)
-		c.Do("get", i)
-		c.Do("get", i)
-		c.Do("get", i)
-		c.Close()
 		if e != nil {
 			fmt.Println("1-------------", e, i)
-			fmt.Println("1-------------", e2, i)
 		} else {
 			fmt.Println("2------------", r, i)
-			fmt.Println("2------------", r2, i)
-
 		}
-		fmt.Println("3--------", c, i)
-		//}(pool,i)
+		}(pool, i)
 	}
 	wg.Wait() // 等待
 	t2 := time.Since(t1)

@@ -5,7 +5,7 @@ import (
 )
 
 func TestRedisz_GetSlot(t *testing.T) {
-	//r:=Redisz{}
+	//r:=Router{}
 
 	//fmt.Println(r.GetSlot("tttttttt"))
 }

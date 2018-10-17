@@ -23,7 +23,7 @@ func TestEtcdx_LoadNodes(t *testing.T) {
 	o := utils.LoadConf()
 	ex := NewEtcdx(o)
 	defer ex.Close()
-	r := proxy.Redisz{}
+	r := proxy.Router{}
 	ex.LoadNodes(&r)
 	for _, n := range r.Nodes {
 		fmt.Println("TestEtcdx_LoadNodes ", n.Addr)
@@ -37,7 +37,7 @@ func TestEtcdx_AddNode(t *testing.T) {
 	defer ex.Close()
 	n := proxy.Node{
 		ID:        "1",
-		Addr:      "127.0.0.1:6379",
+		Addr:      "127.0.0.1:6381",
 		Status:    1,
 		MaxIdle:   10,
 		MaxActive: 3,

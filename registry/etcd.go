@@ -33,7 +33,7 @@ func NewEtcdx(o *utils.Option) *Etcdx {
 	return r
 }
 
-func (e *Etcdx) LoadNodes(r *proxy.Redisz) {
+func (e *Etcdx) LoadNodes(r *proxy.Router) {
 	//设置1秒超时，访问etcd有超时控制
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
 	resp, err := e.cli.Get(ctx, "/saber/nodes/", clientv3.WithPrefix())
@@ -72,7 +72,7 @@ func (e *Etcdx) LoadNodes(r *proxy.Redisz) {
 	}
 }
 
-func (e *Etcdx) LoadSlots(r *proxy.Redisz) {
+func (e *Etcdx) LoadSlots(r *proxy.Router) {
 	//TODO
 	for i := 0; i < 1024; i++ {
 		s := proxy.NewSlot(i, r.Nodes[i%len(r.Nodes)])

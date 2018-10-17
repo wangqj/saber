@@ -8,11 +8,10 @@ import (
 	"saber/utils"
 	"strconv"
 	"sync"
-	"bytes"
 )
 
 type Proxy struct {
-	redisz *Redisz
+	redisz *Router
 	status int
 	addr   string
 	exit struct {
@@ -21,7 +20,7 @@ type Proxy struct {
 	mu sync.Mutex
 }
 
-func NewProxy(o *utils.Option, r *Redisz) *Proxy {
+func NewProxy(o *utils.Option, r *Router) *Proxy {
 	s := &Proxy{}
 	s.redisz = r
 	s.status = 1
@@ -57,7 +56,8 @@ func (p *Proxy) Start(t time.Time) {
 		defer func() {
 			eh <- err
 		}()
-		go handle(conn, p.redisz)
+		s := NewSession(conn)
+		s.Start(p.redisz)
 	}
 	select {
 	case <-p.exit.C:
@@ -67,56 +67,7 @@ func (p *Proxy) Start(t time.Time) {
 	}
 }
 
-func handle(proxyConn net.Conn, redisz *Redisz) {
-	log.Println("handle request")
-	proxyBuffer := make([]byte, 2048)
-	proxyConn.Read(proxyBuffer)
-	proxyBuffer = bytes.TrimRight(proxyBuffer, "\x00")
-	log.Println("request content is %s", string(proxyBuffer))
 
-	//resp
-	r2 := bytes.NewReader(proxyBuffer)
 
-	data, err := ReadCommand(r2)
-	if err != nil {
-		log.Println(err)
-	}
-	//slot
-	s := redisz.GetSlot(data.Value(1))
-	////判断slot状态，
-	//CheckSlot(s)
-	//转发到redis
-	conn, err := s.node.pool.Get()
-	defer s.node.pool.Put(conn)
-	c := conn.(net.Conn)
-	c.Write(proxyBuffer)
-	redisBuffer := make([]byte, 2048)
-	re, readerr := c.Read(redisBuffer)
-	if readerr != nil {
-		log.Errorln("read redis error: %s", readerr.Error())
-	}
-	log.Println("get result ", string(redisBuffer[:re]), "---------------", "request content is %s", string(proxyBuffer))
-	//返回结果
-	proxyConn.Write(redisBuffer)
-}
-
-func dispatch(redisz *Redisz, v string) {
-
-}
-
-//TODO
-func CheckSlot(s *Slot) {
-
-	switch {
-	case s.status == MIGRATE:
-		log.Println("MIGRATE")
-	case s.status == OFFLINE:
-		log.Println("OFFLINE")
-	case s.status == ONLINE:
-		log.Println("ONLINE")
-
-	}
-
-}
 
 

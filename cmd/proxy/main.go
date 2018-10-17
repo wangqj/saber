@@ -20,7 +20,7 @@ func main() {
 	e := registry.NewEtcdx(o)
 	defer e.Close()
 	//初始化TODO
-	r := proxy.Redisz{}
+	r := proxy.Router{}
 	e.LoadNodes(&r)
 	e.LoadSlots(&r)
 	log.Println("slot count :", len(r.Slots))

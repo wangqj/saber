@@ -26,47 +26,43 @@ func NewSession(c net.Conn) *Session {
 
 func (s *Session) Start(redisz *Router) {
 	var ch = make(chan task)
-	go s.rhandle(&ch, redisz)
-	go s.whandle(&ch)
+	go s.loopRead(&ch, redisz)
+	go s.loopWrite(&ch)
 }
 
-func (s *Session) rhandle(ch *chan task, redisz *Router) {
+func (s *Session) loopRead(ch *chan task, redisz *Router) {
 	defer func() {
-		fmt.Println("rhandle close")
+		fmt.Println("loopRead close")
 	}()
 	for {
-		s.conn.SetReadDeadline(time.Now().Add(time.Duration(10000) * time.Millisecond))
+		s.conn.SetReadDeadline(time.Now().Add(time.Duration(100) * time.Second))
 		proxyBuffer := make([]byte, 2048)
 		n, err := s.conn.Read(proxyBuffer)
 		if err != nil {
 			fmt.Println(os.Stderr, "3Fatal error: %s", err.Error())
 			s.conn.Close()
 			break
-			//os.Exit(1)
 		}
 		r2 := bytes.NewReader(proxyBuffer[:n])
 
 		data, err := ReadCommand(r2)
 		input := data.Value(1)
-		//fmt.Println("rhandle =",input)
 		t := task{req: input}
 		*ch <- t
 	}
 }
-func (s *Session) whandle(ch *chan task) {
+func (s *Session) loopWrite(ch *chan task) {
 	defer func() {
-		fmt.Println("whandle close")
+		fmt.Println("loopWrite close")
 		s.conn.Close()
 	}()
 	for i := 0; ; i++ {
 		select {
 		case msg := <-*ch:
-			//fmt.Println("msg=",msg)
 			d := "+" + msg.req + "\r\n"
-			//fmt.Println(d)
 			_, err := s.conn.Write([]byte(d))
 			if err != nil {
-				fmt.Println(os.Stderr, "whandle error: %s", err.Error())
+				fmt.Println(os.Stderr, "loopWrite error: %s", err.Error())
 				break
 			}
 		}

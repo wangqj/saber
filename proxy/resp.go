@@ -302,3 +302,8 @@ func readRespIntLine(r io.Reader) (int64, error) {
 	}
 	return strconv.ParseInt(string(line), 10, 64)
 }
+
+type Resp struct {
+	data []byte
+	cmd  *Command
+}

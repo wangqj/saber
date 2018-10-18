@@ -36,16 +36,17 @@ func main() {
 	}()
 	for i := 0; i < 100000; i++ {
 		go func(pool *redis.Pool, i int) {
-		wg.Add(1)
-		c := pool.Get()
-		// pool.Close()
+			wg.Add(1)
+			c := pool.Get()
+			// pool.Close()
 			defer c.Close()
 			r, e := redis.String(c.Do("get", i))
-		if e != nil {
-			fmt.Println("1-------------", e, i)
-		} else {
-			fmt.Println("2------------", r, i)
-		}
+			if e != nil {
+				fmt.Println("1-------------", e, i)
+			} else {
+				fmt.Println("2------------", r, i)
+			}
+			wg.Done()
 		}(pool, i)
 	}
 	wg.Wait() // 等待

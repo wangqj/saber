@@ -15,8 +15,8 @@ type Session struct {
 type Request struct {
 }
 type task struct {
-	req string
-	res string
+	reqeust  *Resp
+	response *Resp
 }
 
 func NewSession(c net.Conn) *Session {
@@ -39,16 +39,23 @@ func (s *Session) loopRead(ch *chan task, redisz *Router) {
 		proxyBuffer := make([]byte, 2048)
 		n, err := s.conn.Read(proxyBuffer)
 		if err != nil {
-			fmt.Println(os.Stderr, "3Fatal error: %s", err.Error())
+			fmt.Println(os.Stderr, "loopRead error: %s", err.Error())
 			s.conn.Close()
 			break
 		}
-		r2 := bytes.NewReader(proxyBuffer[:n])
+		reader := bytes.NewReader(proxyBuffer[:n])
+		cmd, err := ReadCommand(reader)
+		resp := &Resp{
+			data: proxyBuffer[:n],
+			cmd:  cmd,
+		}
 
-		data, err := ReadCommand(r2)
-		input := data.Value(1)
-		t := task{req: input}
-		*ch <- t
+		t := &task{
+			reqeust: resp,
+		}
+
+		redisz.HandleRequest(t)
+		*ch <- *t
 	}
 }
 func (s *Session) loopWrite(ch *chan task) {
@@ -59,8 +66,8 @@ func (s *Session) loopWrite(ch *chan task) {
 	for i := 0; ; i++ {
 		select {
 		case msg := <-*ch:
-			d := "+" + msg.req + "\r\n"
-			_, err := s.conn.Write([]byte(d))
+			//d := "+" + msg.req + "\r\n"
+			_, err := s.conn.Write(msg.response.data)
 			if err != nil {
 				fmt.Println(os.Stderr, "loopWrite error: %s", err.Error())
 				break

@@ -54,8 +54,8 @@ func (s *Session) loopRead(ch *chan task, redisz *Router) {
 			reqeust: resp,
 		}
 
-		redisz.HandleRequest(t)
-		*ch <- *t
+		go redisz.HandleRequest(ch, t)
+		//*ch <- *t
 	}
 }
 func (s *Session) loopWrite(ch *chan task) {

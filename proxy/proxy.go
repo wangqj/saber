@@ -11,7 +11,7 @@ import (
 )
 
 type Proxy struct {
-	redisz *Router
+	router *Router
 	status int
 	addr   string
 	exit struct {
@@ -22,9 +22,9 @@ type Proxy struct {
 
 func NewProxy(o *utils.Option, r *Router) *Proxy {
 	s := &Proxy{}
-	s.redisz = r
+	s.router = r
 	s.status = 1
-	s.addr = "127.0.0.1:" + strconv.Itoa(o.Port)
+	s.addr = "0.0.0.0:" + strconv.Itoa(o.Port)
 	s.exit.C = make(chan struct{})
 	return s
 }
@@ -48,7 +48,6 @@ func (p *Proxy) Start(t time.Time) {
 	for {
 		conn, err := netListen.Accept()
 		if err != nil {
-			time.Sleep(time.Duration(100 * time.Millisecond))
 			log.Println(err)
 			continue
 		}
@@ -57,7 +56,8 @@ func (p *Proxy) Start(t time.Time) {
 			eh <- err
 		}()
 		s := NewSession(conn)
-		s.Start(p.redisz)
+		s.Start(p.router)
+
 	}
 	select {
 	case <-p.exit.C:

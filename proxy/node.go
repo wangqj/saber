@@ -41,8 +41,8 @@ func (n *Node) BuildConn() (error) {
 	//创建一个连接池： 初始化5，最大连接30
 	poolConfig := &utils.PoolConfig{
 		Name:       n.Addr,
-		InitialCap: 5,
-		MaxCap:     30,
+		InitialCap: 100,
+		MaxCap:     100,
 		Factory:    factory,
 		Close:      close,
 		//Ping:       ping,

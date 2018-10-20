@@ -19,7 +19,7 @@ func (rz *Router) Dispatch(redisz *Router, v string) {
 
 }
 
-func (rz *Router) HandleRequest(task *task) {
+func (rz *Router) HandleRequest(ch *chan task, task *task) {
 	reader := bytes.NewReader(task.reqeust.data)
 	data, err := ReadCommand(reader)
 	if err != nil {
@@ -32,7 +32,7 @@ func (rz *Router) HandleRequest(task *task) {
 	if err != nil {
 		log.Errorln("get pool error: %s", err.Error())
 	}
-	defer s.node.pool.Put(conn)
+
 	c := conn.(net.Conn)
 
 	switch {
@@ -44,6 +44,12 @@ func (rz *Router) HandleRequest(task *task) {
 		log.Println("no case ,", data.Name())
 
 	}
+	go write(ch, task, c, s)
+}
+
+func write(ch *chan task, task *task, c net.Conn, s *Slot) {
+	defer s.node.pool.Put(c)
+
 	redisBuffer := make([]byte, 2048)
 	n, readerr := c.Read(redisBuffer)
 
@@ -52,12 +58,13 @@ func (rz *Router) HandleRequest(task *task) {
 	}
 
 	rr := bytes.NewReader(redisBuffer[:n])
-	cmd, err := ReadCommand(rr)
+	cmd, _ := ReadCommand(rr)
 	resp := &Resp{
 		data: redisBuffer[:n],
 		cmd:  cmd,
 	}
 	task.response = resp
+	*ch <- *task
 }
 
 func loopReadRedis(task *task) {

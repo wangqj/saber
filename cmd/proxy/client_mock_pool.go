@@ -10,7 +10,7 @@ import (
 
 func main() {
 	var wg sync.WaitGroup
-	t1 := time.Now()
+
 	pool := &redis.Pool{
 		// Other pool configuration not shown in this example.
 		Dial: func() (redis.Conn, error) {
@@ -34,7 +34,9 @@ func main() {
 			fmt.Println("active count=", pool.ActiveCount())
 		}
 	}()
-	for i := 0; i < 100000; i++ {
+
+	t1 := time.Now()
+	for i := 0; i < 1000000; i++ {
 		go func(pool *redis.Pool, i int) {
 			wg.Add(1)
 			c := pool.Get()

@@ -6,9 +6,18 @@ import (
 	"saber/utils"
 	"saber/registry"
 	"saber/proxy"
+	"runtime"
+	_ "net/http/pprof"
+	"net/http"
 )
 
 func main() {
+	//远程获取pprof数据
+	go func() {
+		log.Println(http.ListenAndServe("localhost:8081", nil))
+	}()
+
+	runtime.GOMAXPROCS(8)
 	t := time.Now()
 	log.Info("ready to start!")
 	//命令行参数
@@ -17,10 +26,11 @@ func main() {
 	//ip port
 	o := utils.LoadConf()
 	//读取registry配置
-	e := registry.NewEtcdx(o)
+	e := registry.NewRegistry(o)
 	defer e.Close()
 	//初始化TODO
 	r := proxy.Router{}
+
 	e.LoadNodes(&r)
 	e.LoadSlots(&r)
 	log.Println("slot count :", len(r.Slots))

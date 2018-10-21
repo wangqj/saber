@@ -12,8 +12,6 @@ type Session struct {
 	conn net.Conn
 }
 
-type Request struct {
-}
 type task struct {
 	reqeust  *Resp
 	response *Resp

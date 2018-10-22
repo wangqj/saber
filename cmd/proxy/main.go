@@ -6,9 +6,9 @@ import (
 	"saber/utils"
 	"saber/registry"
 	"saber/proxy"
-	"runtime"
 	_ "net/http/pprof"
 	"net/http"
+	"runtime"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 		log.Println(http.ListenAndServe("localhost:8081", nil))
 	}()
 
-	runtime.GOMAXPROCS(8)
+
 	t := time.Now()
 	log.Info("ready to start!")
 	//命令行参数
@@ -25,6 +25,8 @@ func main() {
 	//读取配置文件，校验参数TODO
 	//ip port
 	o := utils.LoadConf()
+
+	runtime.GOMAXPROCS(o.NCPU)
 	//读取registry配置
 	e := registry.NewRegistry(o)
 	defer e.Close()

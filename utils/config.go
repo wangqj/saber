@@ -16,6 +16,7 @@ type Option struct {
 
 func LoadConf() (*Option) {
 	m := multiconfig.NewWithPath("config.toml") // supports TOML, JSON and YAML
+
 	serverConf := new(Option)
 	err := m.Load(serverConf)
 	if err != nil {

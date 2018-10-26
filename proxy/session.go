@@ -1,75 +1,70 @@
 package proxy
 
 import (
-	"fmt"
-	"net"
-	"time"
 	"os"
-	"bytes"
+	"sync"
+	"saber/proxy/redis"
+	"net"
+	log "github.com/sirupsen/logrus"
 )
 
 type Session struct {
-	conn net.Conn
+	Conn *redis.Conn
 }
 
 type task struct {
-	reqeust  *Resp
-	response *Resp
+	wg       *sync.WaitGroup
+	Multi    []*redis.Resp
+	reqeust  *redis.Resp
+	response *redis.Resp
 }
 
-func NewSession(c net.Conn) *Session {
-	s := Session{conn: c}
+func NewSession(sock net.Conn) *Session {
+	c := redis.NewConn(sock, 10000, 10000)
+	s := Session{Conn: c}
 	return &s
 }
 
 func (s *Session) Start(redisz *Router) {
-	var ch = make(chan task)
-	go s.loopRead(&ch, redisz)
-	go s.loopWrite(&ch)
+	var ch = make(chan *task, 20480)
+	go s.loopRead(ch, redisz)
+	go s.loopWrite(ch, redisz)
 }
 
-func (s *Session) loopRead(ch *chan task, redisz *Router) {
+func (s *Session) loopRead(ch chan *task, redisz *Router) {
 	defer func() {
-		fmt.Println("loopRead close")
+		log.Println("loopRead close")
 	}()
 	for {
-		s.conn.SetReadDeadline(time.Now().Add(time.Duration(100) * time.Second))
-		proxyBuffer := make([]byte, 2048)
-		n, err := s.conn.Read(proxyBuffer)
+		multi, err := s.Conn.DecodeMultiBulk()
 		if err != nil {
-			fmt.Println(os.Stderr, "loopRead error: %s", err.Error())
-			s.conn.Close()
+			log.Println(os.Stderr, "loopRead error: %s", err.Error())
+			s.Conn.Close()
 			break
 		}
-		reader := bytes.NewReader(proxyBuffer[:n])
-		cmd, err := ReadCommand(reader)
-		resp := &Resp{
-			data: proxyBuffer[:n],
-			cmd:  cmd,
-		}
 
-		t := &task{
-			reqeust: resp,
-		}
-
-		go redisz.HandleRequest(ch, t)
-		//*ch <- *t
+		r := &task{}
+		r.Multi = multi
+		r.wg = &sync.WaitGroup{}
+		d := NewData()
+		r.wg.Add(1)
+		d.in <- r
+		ch <- r
 	}
 }
-func (s *Session) loopWrite(ch *chan task) {
+func (s *Session) loopWrite(ch chan *task, redisz *Router) {
 	defer func() {
-		fmt.Println("loopWrite close")
-		s.conn.Close()
+		log.Println("loopWrite close")
+		s.Conn.Close()
 	}()
+	p := s.Conn.FlushEncoder()
 	for i := 0; ; i++ {
 		select {
-		case msg := <-*ch:
-			//d := "+" + msg.req + "\r\n"
-			_, err := s.conn.Write(msg.response.data)
-			if err != nil {
-				fmt.Println(os.Stderr, "loopWrite error: %s", err.Error())
-				break
-			}
+		case t := <-ch:
+			t.wg.Wait()
+			p.Encode(t.response)
+			p.Flush(true)
+
 		}
 	}
 }

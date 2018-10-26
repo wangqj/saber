@@ -25,7 +25,7 @@ func main() {
 		MaxActive:       100,
 		MaxIdle:         100,
 		Wait:            true,
-		MaxConnLifetime: 60 * time.Second,
+		MaxConnLifetime: 600 * time.Second,
 	}
 	//time.Sleep(10*time.Second)
 	go func() {
@@ -47,6 +47,9 @@ func main() {
 				fmt.Println("1-------------", e, i)
 			} else {
 				fmt.Println("2------------", r, i)
+				if i == 0 {
+					fmt.Println("first cost time=", time.Since(t1))
+				}
 			}
 			wg.Done()
 		}(pool, i)

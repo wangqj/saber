@@ -31,6 +31,8 @@ type channelPool struct {
 	mu          sync.Mutex
 	conns       chan *idleConn
 	minCount    int
+	maxCount    int
+	activeCount int
 	factory     func() (interface{}, error)
 	close       func(interface{}) error
 	ping        func(interface{}) error
@@ -58,6 +60,7 @@ func NewChannelPool(poolConfig *PoolConfig) (Pool, error) {
 		name:        poolConfig.Name,
 		conns:       make(chan *idleConn, poolConfig.MaxCap),
 		minCount:    poolConfig.InitialCap,
+		maxCount:    poolConfig.MaxCap,
 		factory:     poolConfig.Factory,
 		close:       poolConfig.Close,
 		idleTimeout: poolConfig.IdleTimeout,
@@ -69,6 +72,7 @@ func NewChannelPool(poolConfig *PoolConfig) (Pool, error) {
 
 	for i := 0; i < poolConfig.InitialCap; i++ {
 		conn, err := c.factory()
+		log.Println("pool stat:", c.name, ", current num is ", len(c.getConns()))
 		if err != nil {
 			c.Release()
 			log.Errorln("factory is not able to fill the pool ", err)
@@ -91,18 +95,22 @@ func (c *channelPool) getConns() chan *idleConn {
 
 //Get 从pool中取一个连接
 func (c *channelPool) Get() (interface{}, error) {
+
 	conns := c.getConns()
 	if conns == nil {
+		fmt.Println("if error ")
 		return nil, ErrClosed
 	}
 	for {
 		select {
 		case wrapConn := <-conns:
+			//fmt.Println("get conn")
 			if wrapConn == nil {
-				return nil, ErrClosed
+				fmt.Println("wrapConn error ")
+				continue
 			}
 			//判断是否超时，超时则丢弃
-			if timeout := c.idleTimeout; timeout > 0 && len(conns) >= c.minCount {
+			if timeout := c.idleTimeout; timeout > 0 && c.activeCount >= c.minCount {
 				if wrapConn.t.Add(timeout).Before(time.Now()) {
 					//丢弃并关闭该连接
 					c.Close(wrapConn.conn)
@@ -116,13 +124,25 @@ func (c *channelPool) Get() (interface{}, error) {
 					continue
 				}
 			}
+			c.mu.Lock()
+			c.activeCount++
+			c.mu.Unlock()
 			return wrapConn.conn, nil
 		default:
+			if c.activeCount >= c.maxCount {
+				//fmt.Println("max=",c.activeCount)
+				//time.Sleep(100*time.Millisecond)
+				continue
+			}
+			log.Println("default pool stat:", c.name, ", current num is ", len(c.getConns()))
 			conn, err := c.factory()
 			if err != nil {
+				fmt.Println("default error ", err)
 				return nil, err
 			}
-
+			c.mu.Lock()
+			c.activeCount++
+			c.mu.Unlock()
 			return conn, nil
 		}
 	}
@@ -130,13 +150,17 @@ func (c *channelPool) Get() (interface{}, error) {
 
 //Put 将连接放回pool中
 func (c *channelPool) Put(conn interface{}) error {
+	//fmt.Println("return ")
 	if conn == nil {
+		c.mu.Lock()
+		c.activeCount--
+		c.mu.Unlock()
 		return errors.New("connection is nil. rejecting")
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-
+	c.activeCount++
 	if c.conns == nil {
 		return c.Close(conn)
 	}
@@ -152,6 +176,9 @@ func (c *channelPool) Put(conn interface{}) error {
 
 //Close 关闭单条连接
 func (c *channelPool) Close(conn interface{}) error {
+	c.mu.Lock()
+	c.activeCount--
+	c.mu.Unlock()
 	if conn == nil {
 		return errors.New("connection is nil. rejecting")
 	}
@@ -174,6 +201,7 @@ func (c *channelPool) Release() {
 	c.factory = nil
 	closeFun := c.close
 	c.close = nil
+	c.activeCount = 0
 	c.mu.Unlock()
 
 	if conns == nil {
@@ -201,7 +229,7 @@ func report(c *channelPool) {
 
 func check(c *channelPool) {
 	for {
-		time.Sleep(15 * time.Second)
+		time.Sleep(60 * time.Second)
 
 		conns := c.getConns()
 		if conns == nil {

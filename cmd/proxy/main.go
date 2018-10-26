@@ -8,7 +8,6 @@ import (
 	"saber/proxy"
 	_ "net/http/pprof"
 	"net/http"
-	"runtime"
 )
 
 func main() {
@@ -26,7 +25,7 @@ func main() {
 	//ip port
 	o := utils.LoadConf()
 
-	runtime.GOMAXPROCS(o.NCPU)
+	//runtime.GOMAXPROCS(o.NCPU)
 	//读取registry配置
 	e := registry.NewRegistry(o)
 	defer e.Close()
@@ -39,6 +38,12 @@ func main() {
 
 	//启动服务TODO
 	p := proxy.NewProxy(o, &r)
-	p.Start(t)
+	//p.Start(t)
+	go p.Start(t)
+
+	d := proxy.NewData()
+	go d.Run(&r)
+
+	time.Sleep(1 * time.Hour)
 
 }

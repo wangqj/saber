@@ -3,7 +3,6 @@ package main
 import (
 	"time"
 	log "github.com/sirupsen/logrus"
-	"saber/utils"
 	"saber/registry"
 	"saber/proxy"
 	_ "net/http/pprof"
@@ -20,13 +19,9 @@ func main() {
 	log.Info("ready to start!")
 	//命令行参数
 
-	//读取配置文件，校验参数TODO
-	//ip port
-	o := utils.LoadConf()
-
 	//runtime.GOMAXPROCS(o.NCPU)
 	//读取registry配置
-	e := registry.NewRegistry(o)
+	e := registry.NewRegistry()
 	defer e.Close()
 	//初始化TODO
 	r := &proxy.Router{}
@@ -34,10 +29,10 @@ func main() {
 	e.LoadNodes(r)
 	e.LoadSlots(r)
 	log.Println("slot count :", len(r.Slots))
-	d := proxy.NewData(o)
-	go d.Run(r)
+	d := proxy.NewData()
+	go d.Start(r)
 	//启动服务TODO
-	p := proxy.NewProxy(o, r)
+	p := proxy.NewProxy(r)
 	//p.Start(t)
 	p.Start(t)
 }

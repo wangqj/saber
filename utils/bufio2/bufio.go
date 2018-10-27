@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"fmt"
 )
 
 const DefaultBufferSize = 1024
@@ -210,7 +209,6 @@ func (b *Writer) flush() error {
 	if b.wpos == 0 {
 		return nil
 	}
-	fmt.Println("flushflushflushflushflushflushflush", string(b.buf[:b.wpos]))
 	n, err := b.wr.Write(b.buf[:b.wpos])
 	if err != nil {
 		b.err = err

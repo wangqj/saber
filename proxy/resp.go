@@ -35,7 +35,7 @@ func (c Command) Name() string {
 	}
 }
 
-//get command.Args[index] in string
+//get command.Args[index] input string
 //
 //I must change the method name from String to Value, because method named String has specical meaning when working with fmt.Sprintf.
 func (c Command) Value(index int) (ret string) {
@@ -45,7 +45,7 @@ func (c Command) Value(index int) (ret string) {
 	return ret
 }
 
-//get command.Args[index] in int64.
+//get command.Args[index] input int64.
 //return 0 if it isn't numberic string.
 func (c Command) Integer(index int) (ret int64) {
 	if len(c.Args) > index {

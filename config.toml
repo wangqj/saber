@@ -2,3 +2,6 @@ Port =16379
 NCPU =8
 RegistryAdrr="127.0.0.1:2379"
 
+SessionBuffer=20480
+DataBuffer=20480
+

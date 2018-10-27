@@ -10,7 +10,6 @@ import (
 	"github.com/CodisLabs/codis/pkg/utils/bufio2"
 	"github.com/CodisLabs/codis/pkg/utils/errors"
 	"github.com/CodisLabs/codis/pkg/utils/unsafe2"
-	"fmt"
 )
 
 type Conn struct {
@@ -26,7 +25,6 @@ type Conn struct {
 }
 
 func DialTimeout(addr string, timeout time.Duration, rbuf, wbuf int) (*Conn, error) {
-	fmt.Println("DialTimeout-------------------", addr)
 	c, err := net.DialTimeout("tcp", addr, timeout)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -35,7 +33,6 @@ func DialTimeout(addr string, timeout time.Duration, rbuf, wbuf int) (*Conn, err
 }
 
 func NewConn(sock net.Conn, rbuf, wbuf int) *Conn {
-	fmt.Println("NewConn-------------------", sock)
 	conn := &Conn{Sock: sock}
 	conn.Decoder = newConnDecoder(conn, rbuf)
 	conn.Encoder = newConnEncoder(conn, wbuf)
@@ -51,7 +48,6 @@ func (c *Conn) RemoteAddr() string {
 }
 
 func (c *Conn) Close() error {
-	fmt.Println("close-------------------", c.Sock)
 	return c.Sock.Close()
 }
 

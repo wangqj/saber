@@ -7,9 +7,11 @@ import (
 )
 
 type Option struct {
-	Port         int `default:"16379"`
-	NCPU         int
-	RegistryAdrr string
+	Port          int `default:"16379"`
+	NCPU          int
+	RegistryAdrr  string
+	SessionBuffer int
+	DataBuffer    int
 }
 
 //读取本地配置文件TODO

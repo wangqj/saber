@@ -15,7 +15,6 @@ type Session struct {
 type task struct {
 	wg       *sync.WaitGroup
 	Multi    []*redis.Resp
-	reqeust  *redis.Resp
 	response *redis.Resp
 }
 
@@ -27,11 +26,11 @@ func NewSession(sock net.Conn) *Session {
 
 func (s *Session) Start(redisz *Router) {
 	var ch = make(chan *task, 20480)
-	go s.loopRead(ch, redisz)
-	go s.loopWrite(ch, redisz)
+	go s.loopRead(ch)
+	go s.loopWrite(ch)
 }
 
-func (s *Session) loopRead(ch chan *task, redisz *Router) {
+func (s *Session) loopRead(ch chan *task) {
 	defer func() {
 		log.Println("loopRead close")
 	}()
@@ -46,13 +45,13 @@ func (s *Session) loopRead(ch chan *task, redisz *Router) {
 		r := &task{}
 		r.Multi = multi
 		r.wg = &sync.WaitGroup{}
-		d := NewData()
+		d := GetData()
 		r.wg.Add(1)
-		d.in <- r
+		d.input <- r
 		ch <- r
 	}
 }
-func (s *Session) loopWrite(ch chan *task, redisz *Router) {
+func (s *Session) loopWrite(ch chan *task) {
 	defer func() {
 		log.Println("loopWrite close")
 		s.Conn.Close()

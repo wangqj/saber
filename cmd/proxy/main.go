@@ -16,7 +16,6 @@ func main() {
 		log.Println(http.ListenAndServe("localhost:8081", nil))
 	}()
 
-
 	t := time.Now()
 	log.Info("ready to start!")
 	//命令行参数
@@ -30,20 +29,15 @@ func main() {
 	e := registry.NewRegistry(o)
 	defer e.Close()
 	//初始化TODO
-	r := proxy.Router{}
+	r := &proxy.Router{}
 
-	e.LoadNodes(&r)
-	e.LoadSlots(&r)
+	e.LoadNodes(r)
+	e.LoadSlots(r)
 	log.Println("slot count :", len(r.Slots))
-
+	d := proxy.NewData(o)
+	go d.Run(r)
 	//启动服务TODO
-	p := proxy.NewProxy(o, &r)
+	p := proxy.NewProxy(o, r)
 	//p.Start(t)
-	go p.Start(t)
-
-	d := proxy.NewData()
-	go d.Run(&r)
-
-	time.Sleep(1 * time.Hour)
-
+	p.Start(t)
 }

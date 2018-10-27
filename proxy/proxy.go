@@ -20,7 +20,8 @@ type Proxy struct {
 	mu sync.Mutex
 }
 
-func NewProxy(o *utils.Option, r *Router) *Proxy {
+func NewProxy(r *Router) *Proxy {
+	o := utils.GetConf()
 	s := &Proxy{}
 	s.router = r
 	s.status = 1

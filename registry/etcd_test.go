@@ -20,7 +20,7 @@ func TestNewEtcdxNewEtcdx(t *testing.T) {
 }
 
 func TestEtcdx_LoadNodes(t *testing.T) {
-	o := utils.LoadConf()
+	o := utils.GetConf()
 	ex := NewEtcdx(o)
 	defer ex.Close()
 	r := proxy.Router{}
@@ -32,7 +32,7 @@ func TestEtcdx_LoadNodes(t *testing.T) {
 }
 
 func TestEtcdx_AddNode(t *testing.T) {
-	o := utils.LoadConf()
+	o := utils.GetConf()
 	ex := NewEtcdx(o)
 	defer ex.Close()
 	n := proxy.Node{

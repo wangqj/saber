@@ -17,7 +17,8 @@ type Etcdx struct {
 
 }
 
-func NewRegistry(o *utils.Option) Registry {
+func NewRegistry() Registry {
+	o := utils.GetConf()
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   []string{o.RegistryAdrr},
 		DialTimeout: 5 * time.Second,

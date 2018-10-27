@@ -9,6 +9,7 @@ import (
 )
 
 type data struct {
+	mu    sync.Mutex
 	input chan *task
 	inner chan *task
 }
@@ -16,7 +17,8 @@ type data struct {
 var once sync.Once
 var instance *data
 
-func NewData(o *utils.Option) *data {
+func NewData() *data {
+	o := utils.GetConf()
 	log.Println("init data ", o.SessionBuffer)
 	once.Do(func() {
 		instance = &data{
@@ -31,19 +33,20 @@ func GetData() (*data) {
 	return instance
 }
 
-func (d *data) Run(rz *Router) {
-
+func (d *data) Start(rz *Router) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	for i := 0; i < 8; i++ {
 		d.loopWrite(rz)
 	}
 }
 
-func (d *data) GetConn(rz *Router) (*redis.Conn) {
+func (d *data) getConn(rz *Router) (*redis.Conn) {
 	c, err := redis.DialTimeout(":6381", time.Second*5,
 		128*1024,
 		128*1024)
 	if err != nil {
-		log.Errorln("GetConn error: %s", err.Error())
+		log.Errorln("getConn error: %s", err.Error())
 	}
 	go d.loopRead(c)
 
@@ -51,7 +54,7 @@ func (d *data) GetConn(rz *Router) (*redis.Conn) {
 }
 
 func (d *data) loopWrite(rz *Router) {
-	c := d.GetConn(rz)
+	c := d.getConn(rz)
 	p := c.FlushEncoder()
 	p.MaxInterval = time.Millisecond
 	p.MaxBuffered = cap(d.inner) / 2

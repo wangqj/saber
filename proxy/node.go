@@ -16,6 +16,7 @@ type Node struct {
 	proc      *Processor
 }
 
+//创建连接，每个node一个连接
 func (n *Node) BuildConn() (error) {
 	c, err := redis.DialTimeout(n.Addr, time.Second*5,
 		128*1024,

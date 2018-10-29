@@ -29,10 +29,8 @@ func main() {
 	e.LoadNodes(r)
 	e.LoadSlots(r)
 	log.Println("slot count :", len(r.Slots))
-	d := proxy.NewData()
-	go d.Start(r)
+
 	//启动服务TODO
 	p := proxy.NewProxy(r)
-	//p.Start(t)
 	p.Start(t)
 }

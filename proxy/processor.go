@@ -8,58 +8,43 @@ import (
 	"saber/utils"
 )
 
-type data struct {
+type Processor struct {
 	mu    sync.Mutex
+	conn  *redis.Conn
 	input chan *task
 	inner chan *task
 }
 
-var once sync.Once
-var instance *data
-
-func NewData() *data {
+func NewProcessor(conn *redis.Conn) *Processor {
 	o := utils.GetConf()
-	log.Println("init data ", o.SessionBuffer)
-	once.Do(func() {
-		instance = &data{
-			input: make(chan *task, o.SessionBuffer),
-			inner: make(chan *task, o.DataBuffer),
-		}
-	})
+	log.Println("init Processor ", o.SessionBuffer)
+	instance := &Processor{
+		input: make(chan *task, o.SessionBuffer),
+		inner: make(chan *task, o.DataBuffer),
+		conn:  conn,
+	}
 	return instance
 }
 
-func GetData() (*data) {
-	return instance
-}
-
-func (d *data) Start(rz *Router) {
+func (d *Processor) Start() {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	//应该变成可配置
 	for i := 0; i < 8; i++ {
-		d.loopWrite(rz)
+		go d.loopRead()
+		d.loopWrite()
 	}
 }
 
-func (d *data) getConn(rz *Router) (*redis.Conn) {
-	c, err := redis.DialTimeout(":6381", time.Second*5,
-		128*1024,
-		128*1024)
-	if err != nil {
-		log.Errorln("getConn error: %s", err.Error())
-	}
-	go d.loopRead(c)
-
-	return c
-}
-
-func (d *data) loopWrite(rz *Router) {
-	c := d.getConn(rz)
-	p := c.FlushEncoder()
+func (d *Processor) loopWrite() {
+	//TODO，应该根据redis建立channel，连接应该已经确定
+	//c := d.getConn(rz)
+	p := d.conn.FlushEncoder()
 	p.MaxInterval = time.Millisecond
 	p.MaxBuffered = cap(d.inner) / 2
 
 	for r := range d.input {
+
 		err := p.EncodeMultiBulk(r.Multi)
 		if err != nil {
 			log.Errorln("EncodeMultiBulk error: %s", err.Error())
@@ -71,12 +56,12 @@ func (d *data) loopWrite(rz *Router) {
 	}
 }
 
-func (d *data) loopRead(c *redis.Conn) {
+func (d *Processor) loopRead() {
 	defer func() {
-		c.Close()
+		d.conn.Close()
 	}()
 	for r := range d.inner {
-		resp, err := c.Decode()
+		resp, err := d.conn.Decode()
 		if err != nil {
 			log.Errorln("read redis error: %s", err.Error())
 		}

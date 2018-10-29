@@ -58,6 +58,7 @@ func (e *Etcdx) LoadNodes(r *proxy.Router) {
 		}
 		log.Println("Addr=", p.Addr)
 		if p.Status == 1 {
+			p.BuildConn()
 			r.Nodes = append(r.Nodes, &p)
 		} else {
 			log.Println("this node status is :", p.Status)

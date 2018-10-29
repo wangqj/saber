@@ -25,13 +25,13 @@ func NewSession(sock net.Conn, ) *Session {
 	return &s
 }
 
-func (s *Session) Start(redisz *Router) {
+func (s *Session) Start(router *Router) {
 	log.Println("session start")
-	go s.loopRead()
+	go s.loopRead(router)
 	go s.loopWrite()
 }
 
-func (s *Session) loopRead() {
+func (s *Session) loopRead(router *Router) {
 	defer func() {
 		log.Println("loopRead close")
 	}()
@@ -42,17 +42,27 @@ func (s *Session) loopRead() {
 			s.Conn.Close()
 			break
 		}
-
-		r := &task{
-			Multi: multi,
-			wg:    &sync.WaitGroup{},
-		}
-		d := GetData()
-		r.wg.Add(1)
-		d.input <- r
+		r := buildTask(multi)
+		handleRequest(r, router)
 		s.ch <- r
 	}
 }
+
+func buildTask(respArray []*redis.Resp) *task {
+	r := &task{
+		Multi: respArray,
+		wg:    &sync.WaitGroup{},
+	}
+	r.wg.Add(1)
+	return r
+}
+
+func handleRequest(t *task, router *Router) {
+	//TODO 根据muti获取slot
+	p := router.GetSlot("").node.proc
+	p.input <- t
+}
+
 func (s *Session) loopWrite() {
 	defer func() {
 		log.Println("loopWrite close")

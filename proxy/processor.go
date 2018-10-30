@@ -29,11 +29,8 @@ func NewProcessor(conn *redis.Conn) *Processor {
 func (d *Processor) Start() {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	//应该变成可配置
-	for i := 0; i < 8; i++ {
-		go d.loopRead()
-		d.loopWrite()
-	}
+	go d.loopRead()
+	d.loopWrite()
 }
 
 func (d *Processor) loopWrite() {

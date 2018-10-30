@@ -6,7 +6,7 @@ import (
 )
 
 func TestHashCode(t *testing.T) {
-	logrus.Println(HashCode("aaaaa"))
-	logrus.Println(HashCode("dDSDSF"))
-	logrus.Println(HashCode("890@323"))
+	logrus.Println(HashCode([]byte("aaaaa")))
+	logrus.Println(HashCode([]byte("dDSDSF")))
+	logrus.Println(HashCode([]byte("890@323")))
 }

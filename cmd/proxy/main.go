@@ -23,14 +23,13 @@ func main() {
 	//读取registry配置
 	e := registry.NewRegistry()
 	defer e.Close()
-	//初始化TODO
+	//初始化
 	r := &proxy.Router{}
-
 	e.LoadNodes(r)
 	e.LoadSlots(r)
 	log.Println("slot count :", len(r.Slots))
 
-	//启动服务TODO
+	//启动服务
 	p := proxy.NewProxy(r)
 	p.Start(t)
 }

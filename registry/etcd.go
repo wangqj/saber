@@ -9,6 +9,7 @@ import (
 	"saber/utils"
 	"encoding/json"
 	"strconv"
+	"fmt"
 )
 
 const SLOT_COUNT int = 16
@@ -88,7 +89,7 @@ func (e *Etcdx) LoadNodes(r *proxy.Router) {
 func (e *Etcdx) LoadSlots(r *proxy.Router) {
 	//设置1秒超时，访问etcd有超时控制
 	ctx, _ := context.WithTimeout(context.Background(), time.Second)
-	resp, err := e.CLi.Get(ctx, "/saber/slots/", clientv3.WithPrefix())
+	resp, err := e.CLi.Get(ctx, "/saber/slots/", clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 	if err != nil {
 		log.Println("get failed, err:", err)
 		return
@@ -109,6 +110,7 @@ func (e *Etcdx) LoadSlots(r *proxy.Router) {
 			log.Println("this slot status is :", s.Status)
 		}
 	}
+	fmt.Println(r.Slots)
 }
 
 func (e *Etcdx) Close() {
@@ -144,7 +146,7 @@ func (e *Etcdx) InitSlots(r *proxy.Router) {
 				log.Println(err)
 			} else {
 				log.Info("init slot ", *s)
-				resp, ce := e.CLi.Put(ctx, "/saber/slots/"+string(s.ID), string(b))
+				resp, ce := e.CLi.Put(ctx, "/saber/slots/"+utils.AddZeroForStr(s.ID, 4), string(b))
 				if ce != nil {
 					log.Println(ce)
 				} else {

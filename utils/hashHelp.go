@@ -2,8 +2,8 @@ package utils
 
 import "hash/crc32"
 
-func HashCode(s string) int {
-	v := int(crc32.ChecksumIEEE([]byte(s)))
+func HashCode(b []byte) int {
+	v := int(crc32.ChecksumIEEE(b))
 	if v >= 0 {
 		return v
 	}

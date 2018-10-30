@@ -3,6 +3,7 @@ package proxy
 import (
 	"saber/utils"
 	log "github.com/sirupsen/logrus"
+	"fmt"
 )
 
 type Router struct {
@@ -10,8 +11,8 @@ type Router struct {
 	Slots []*Slot
 }
 
-func (rz *Router) GetSlot(k string) *Slot {
-
+func (rz *Router) GetSlot(k []byte) *Slot {
+	fmt.Println("---------", utils.HashCode(k)%1024)
 	return rz.Slots[utils.HashCode(k)%1024]
 }
 

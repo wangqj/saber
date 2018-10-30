@@ -6,6 +6,7 @@ import (
 	"saber/proxy/redis"
 	"net"
 	log "github.com/sirupsen/logrus"
+	"fmt"
 )
 
 type Session struct {
@@ -20,9 +21,10 @@ type task struct {
 }
 
 func NewSession(sock net.Conn, ) *Session {
+	//TODO，rbuf需要从配置中取
 	c := redis.NewConn(sock, 10000, 10000)
-	s := Session{Conn: c, ch: make(chan *task, 20480)}
-	return &s
+	s := &Session{Conn: c, ch: make(chan *task, 20480)}
+	return s
 }
 
 func (s *Session) Start(router *Router) {
@@ -31,6 +33,7 @@ func (s *Session) Start(router *Router) {
 	go s.loopWrite()
 }
 
+//循环读取数据
 func (s *Session) loopRead(router *Router) {
 	defer func() {
 		log.Println("loopRead close")
@@ -48,6 +51,7 @@ func (s *Session) loopRead(router *Router) {
 	}
 }
 
+//构建任务数据
 func buildTask(respArray []*redis.Resp) *task {
 	r := &task{
 		Multi: respArray,
@@ -57,12 +61,18 @@ func buildTask(respArray []*redis.Resp) *task {
 	return r
 }
 
+//处理请求，主要负责解析resp，分发请求
 func handleRequest(t *task, router *Router) {
-	//TODO 根据muti获取slot
-	p := router.GetSlot("").Node.proc
+	//根据muti获取slot
+	resp := t.Multi[1]
+	log.Println("resp.Value=", string(resp.Value), "resp.Type=", string(resp.Type))
+	fmt.Println("=======", router.GetSlot(resp.Value).Node)
+	p := router.GetSlot(resp.Value).Node.proc
+	//传递到processor通道
 	p.input <- t
 }
 
+//最后处理的结果返回给客户端
 func (s *Session) loopWrite() {
 	defer func() {
 		log.Println("loopWrite close")

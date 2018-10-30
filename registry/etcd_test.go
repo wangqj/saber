@@ -27,10 +27,10 @@ func newEtcdx() *Etcdx {
 
 func TestEtcdx_LoadNodes(t *testing.T) {
 	//o := utils.GetConf()
-	ex := NewRegistry()
+	ex := NewRegistryByPath("../config.toml")
 	defer ex.Close()
-	r := proxy.Router{}
-	ex.LoadNodes(&r)
+	r := &proxy.Router{}
+	ex.LoadNodes(r)
 	for _, n := range r.Nodes {
 		fmt.Println("TestEtcdx_LoadNodes ", n.Addr)
 	}
@@ -57,4 +57,23 @@ func TestEtcdx_AddNode(t *testing.T) {
 	//assert.JSONEq(t, "{\"ID\":\"1\",\"Addr\":\"127.0.0.1:6379\",\"Status\":1,\"MaxIdle\":0,\"MaxActive\":0}", string(b))
 }
 
+func TestEtcdx_LoadSlots(t *testing.T) {
+	ex := NewRegistryByPath("../config.toml")
+	defer ex.Close()
+	r := &proxy.Router{}
+	ex.LoadSlots(r)
+}
 
+func TestEtcdx_InitSlots(t *testing.T) {
+	ex := NewRegistryByPath("../config.toml")
+	defer ex.Close()
+	r := &proxy.Router{}
+	ex.LoadNodes(r)
+	ex.InitSlots(r)
+}
+
+func TestEtcdx_ClearSlots(t *testing.T) {
+	ex := NewRegistryByPath("../config.toml")
+	defer ex.Close()
+	ex.ClearSlots()
+}

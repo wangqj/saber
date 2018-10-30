@@ -13,7 +13,7 @@ import (
 const SLOT_COUNT int = 16
 
 type Etcdx struct {
-	cli *clientv3.Client
+	CLi *clientv3.Client
 
 }
 
@@ -29,7 +29,7 @@ func NewRegistry() Registry {
 	}
 
 	log.Println("connect etcd succuess ")
-	//defer cli.Close()
+	//defer CLi.Close()
 	r := &Etcdx{cli}
 	return r
 }
@@ -37,7 +37,7 @@ func NewRegistry() Registry {
 func (e *Etcdx) LoadNodes(r *proxy.Router) {
 	//设置1秒超时，访问etcd有超时控制
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
-	resp, err := e.cli.Get(ctx, "/saber/nodes/", clientv3.WithPrefix())
+	resp, err := e.CLi.Get(ctx, "/saber/nodes/", clientv3.WithPrefix())
 	if err != nil {
 		log.Errorln(err)
 		log.Fatal(err)
@@ -76,7 +76,7 @@ func (e *Etcdx) LoadSlots(r *proxy.Router) {
 
 	//设置1秒超时，访问etcd有超时控制
 	//ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	//resp, err := e.cli.Get(ctx, "/saber/slots/")
+	//resp, err := e.CLi.Get(ctx, "/saber/slots/")
 	//cancel()
 	//if err != nil {
 	//	log.Println("get failed, err:", err)
@@ -89,16 +89,16 @@ func (e *Etcdx) LoadSlots(r *proxy.Router) {
 }
 
 func (e *Etcdx) Close() {
-	e.cli.Close()
+	e.CLi.Close()
 }
 
-func (e *Etcdx) AddNode(n proxy.Node) {
+func (e *Etcdx) AddNode(n *proxy.Node) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
 	b, err := json.Marshal(n)
 	if err != nil {
 		log.Println(err)
 	} else {
-		resp, ce := e.cli.Put(ctx, "/saber/nodes/"+n.ID, string(b))
+		resp, ce := e.CLi.Put(ctx, "/saber/nodes/"+n.ID, string(b))
 		if ce != nil {
 			log.Println(ce)
 		} else {

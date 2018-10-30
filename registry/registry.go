@@ -5,8 +5,9 @@ import (
 )
 
 type Registry interface {
-	//NewRegistry(o *utils.Option) (*Registry)
+
 	LoadNodes(r *proxy.Router) //(error)
 	LoadSlots(r *proxy.Router) //(error)
+	AddNode(n *proxy.Node)
 	Close()
 }

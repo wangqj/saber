@@ -18,6 +18,7 @@ type Node struct {
 
 //创建连接，每个node一个连接
 func (n *Node) BuildConn() (error) {
+	//TODO buffer可配置
 	c, err := redis.DialTimeout(n.Addr, time.Second*5,
 		128*1024,
 		128*1024)

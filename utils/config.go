@@ -19,8 +19,13 @@ var once sync.Once
 //读取本地配置文件TODO
 
 func GetConf() (*Option) {
+	GetConfByPath("config.toml")
+	return option
+}
+
+func GetConfByPath(path string) (*Option) {
 	once.Do(func() {
-		m := multiconfig.NewWithPath("config.toml") // supports TOML, JSON and YAML
+		m := multiconfig.NewWithPath(path) // supports TOML, JSON and YAML
 
 		option = new(Option)
 		err := m.Load(option)

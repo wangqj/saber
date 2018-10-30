@@ -3,6 +3,7 @@ package proxy
 import (
 	"saber/utils"
 	log "github.com/sirupsen/logrus"
+	"fmt"
 )
 
 type Router struct {
@@ -11,8 +12,22 @@ type Router struct {
 }
 
 func (rz *Router) GetSlot(k string) *Slot {
+
 	return rz.Slots[utils.HashCode(k)%1024]
 }
+
+func (rz *Router) GetNodeByNID(k string) *Node {
+
+	for n, v := range rz.Nodes {
+		fmt.Println(n, v)
+		if v.ID == k {
+			return v
+		}
+	}
+	fmt.Println("mismatch", k)
+	return nil
+}
+
 func (rz *Router) Dispatch(redisz *Router, v string) {
 
 }
@@ -21,11 +36,11 @@ func (rz *Router) Dispatch(redisz *Router, v string) {
 func (rz *Router) CheckSlot(s *Slot) {
 
 	switch {
-	case s.status == MIGRATE:
+	case s.Status == MIGRATE:
 		log.Println("MIGRATE")
-	case s.status == OFFLINE:
+	case s.Status == OFFLINE:
 		log.Println("OFFLINE")
-	case s.status == ONLINE:
+	case s.Status == ONLINE:
 		log.Println("ONLINE")
 
 	}

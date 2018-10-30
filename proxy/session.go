@@ -59,7 +59,7 @@ func buildTask(respArray []*redis.Resp) *task {
 
 func handleRequest(t *task, router *Router) {
 	//TODO 根据muti获取slot
-	p := router.GetSlot("").node.proc
+	p := router.GetSlot("").Node.proc
 	p.input <- t
 }
 

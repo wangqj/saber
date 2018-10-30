@@ -3,7 +3,6 @@ package proxy
 import (
 	"saber/utils"
 	log "github.com/sirupsen/logrus"
-	"fmt"
 )
 
 type Router struct {
@@ -18,13 +17,11 @@ func (rz *Router) GetSlot(k string) *Slot {
 
 func (rz *Router) GetNodeByNID(k string) *Node {
 
-	for n, v := range rz.Nodes {
-		fmt.Println(n, v)
+	for _, v := range rz.Nodes {
 		if v.ID == k {
 			return v
 		}
 	}
-	fmt.Println("mismatch", k)
 	return nil
 }
 

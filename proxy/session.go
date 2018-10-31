@@ -63,13 +63,19 @@ func buildTask(respArray []*redis.Resp) *task {
 
 //处理请求，主要负责解析resp，分发请求
 func handleRequest(t *task, router *Router) {
-	//根据muti获取slot
-	resp := t.Multi[1]
-	log.Println("resp.Value=", string(resp.Value), "resp.Type=", string(resp.Type))
-	fmt.Println("=======", router.GetSlot(resp.Value).Node)
-	p := router.GetSlot(resp.Value).Node.proc
-	//传递到processor通道
-	p.input <- t
+
+	switch getFlag(t.Multi) {
+	case "ping":
+		//TODO
+		fmt.Println("ping")
+	default:
+		//根据muti获取slot
+		resp := t.Multi[1]
+		p := router.GetSlot(resp.Value).Node.proc
+		//传递到processor通道
+		p.input <- t
+	}
+
 }
 
 //最后处理的结果返回给客户端

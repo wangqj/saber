@@ -34,8 +34,6 @@ func (d *Processor) Start() {
 }
 
 func (d *Processor) loopWrite() {
-	//TODO，应该根据redis建立channel，连接应该已经确定
-	//c := d.getConn(rz)
 	p := d.conn.FlushEncoder()
 	p.MaxInterval = time.Millisecond
 	p.MaxBuffered = cap(d.inner) / 2

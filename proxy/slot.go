@@ -16,6 +16,3 @@ func NewSlot(id string, n *Node) *Slot {
 	return &Slot{id, n, n.ID, 1}
 }
 
-func FindSlot() {
-
-}

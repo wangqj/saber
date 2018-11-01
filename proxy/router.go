@@ -10,12 +10,14 @@ type Router struct {
 	Slots []*Slot
 }
 
+//根据请求，计算属于哪个slot
 func (rz *Router) GetSlot(k []byte) *Slot {
+	//TODO 1024应该从配置中取
 	return rz.Slots[utils.HashCode(k)%1024]
 }
 
+//根据NID获取NODE节点
 func (rz *Router) GetNodeByNID(k string) *Node {
-
 	for _, v := range rz.Nodes {
 		if v.ID == k {
 			return v

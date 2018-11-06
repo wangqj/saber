@@ -33,6 +33,11 @@ func (d *Processor) Start() {
 	d.loopWrite()
 }
 
+//TODO
+func (d *Processor) Stop() {
+	//close(d.input)
+}
+
 func (d *Processor) loopWrite() {
 	p := d.conn.FlushEncoder()
 	p.MaxInterval = time.Millisecond

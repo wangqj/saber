@@ -9,6 +9,7 @@ import (
 	"saber/utils"
 	"encoding/json"
 	"strconv"
+	"strings"
 	"fmt"
 )
 
@@ -21,8 +22,14 @@ type Etcdx struct {
 
 func NewRegistry() Registry {
 	o := utils.GetConf()
+	var addrs []string
+	if strings.Index(o.RegistryAdrr, ",") > 0 {
+		addrs = strings.Split(o.RegistryAdrr, ",")
+	} else {
+		addrs = append(addrs, o.RegistryAdrr)
+	}
 	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{o.RegistryAdrr},
+		Endpoints:   addrs,
 		DialTimeout: 5 * time.Second,
 	})
 	if err != nil {
@@ -38,8 +45,15 @@ func NewRegistry() Registry {
 
 func NewRegistryByPath(path string) Registry {
 	o := utils.GetConfByPath(path)
+	var addrs []string
+	if strings.Index(o.RegistryAdrr, ",") > 0 {
+		addrs = strings.Split(o.RegistryAdrr, ",")
+	} else {
+		addrs = append(addrs, o.RegistryAdrr)
+	}
+
 	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{o.RegistryAdrr},
+		Endpoints:   addrs,
 		DialTimeout: 5 * time.Second,
 	})
 	if err != nil {
@@ -65,7 +79,7 @@ func (e *Etcdx) LoadNodes(r *proxy.Router) {
 	}
 	//cancel()
 	if err != nil {
-		log.Println("get failed, err:", err)
+		log.Errorln("get nodes failed, err:", err)
 		return
 	}
 	for _, ev := range resp.Kvs {
@@ -73,7 +87,7 @@ func (e *Etcdx) LoadNodes(r *proxy.Router) {
 		var p proxy.Node
 		err := json.Unmarshal(ev.Value, &p)
 		if err != nil {
-			log.Println("json unmarshal failed, err:", err)
+			log.Errorln("json unmarshal failed, err:", err)
 		}
 		log.Println("Addr=", p.Addr)
 		if p.Status == 1 {
@@ -91,16 +105,16 @@ func (e *Etcdx) LoadSlots(r *proxy.Router) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second)
 	resp, err := e.CLi.Get(ctx, "/saber/slots/", clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 	if err != nil {
-		log.Println("get failed, err:", err)
+		log.Errorln("get slots failed, err:", err)
 		return
 	}
 	for _, ev := range resp.Kvs {
-		log.Printf("%s : %s\n", ev.Key, ev.Value)
+		//log.Printf("%s : %s\n", ev.Key, ev.Value)
 		var s proxy.Slot
 		err := json.Unmarshal(ev.Value, &s)
 
 		if err != nil {
-			log.Println("json unmarshal failed, err:", err)
+			log.Errorln("json unmarshal failed, err:", err)
 			continue
 		}
 		if s.Status == 1 {
@@ -110,7 +124,6 @@ func (e *Etcdx) LoadSlots(r *proxy.Router) {
 			log.Println("this slot status is :", s.Status)
 		}
 	}
-	fmt.Println(r.Slots)
 }
 
 func (e *Etcdx) Close() {
@@ -171,6 +184,92 @@ func (e *Etcdx) ClearSlots() {
 
 }
 
+func (e *Etcdx) WatchNodes(r *proxy.Router) {
+	rch := e.CLi.Watch(context.Background(), "/saber/nodes/", clientv3.WithPrefix())
+	for wresp := range rch {
+		for _, ev := range wresp.Events {
+			switch ev.Type {
+			case clientv3.EventTypePut:
+				fmt.Printf("[%s] %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
+				var p proxy.Node
+				err := json.Unmarshal(ev.Kv.Value, &p)
+				if err != nil {
+					log.Errorln("json unmarshal failed, err:", err)
+				}
+				log.Println("Addr=", p.Addr)
+				//这里很复杂，分多种情况
+				f := false
+				for k, v := range r.Nodes {
+					if v.ID == p.ID {
+						if p.Status == 0 {
+							//没有处理slot，如果是node挂掉了，应该用备份节点替换，如果是手动操作，应该先迁移slot
+							//此处应该认为此node没有slot了
+							r.Nodes[k].Close()
+							r.Nodes = append(r.Nodes[:k], r.Nodes[k+1:]...)
+							//v=&p
+							f = true
+							break
+						}
+					}
+				}
+				if !f {
+					if p.Status == 1 {
+						p.BuildConn()
+						r.Nodes = append(r.Nodes, &p)
+					} else {
+						//TODO
+						log.Println("this node status is :", p.Status)
+					}
+				}
+
+			case clientv3.EventTypeDelete:
+				log.Println("EventTypeDelete :")
+			default:
+				log.Println("defult :", ev.Kv)
+
+			}
+
+		}
+	}
+}
+
+func (e *Etcdx) WatchSlots(r *proxy.Router) {
+	rch := e.CLi.Watch(context.Background(), "/saber/slots/", clientv3.WithPrefix())
+	for wresp := range rch {
+		for _, ev := range wresp.Events {
+			switch ev.Type {
+			case clientv3.EventTypePut:
+				fmt.Printf("[%s] %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
+				var slot proxy.Slot
+				err := json.Unmarshal(ev.Kv.Value, &slot)
+				if err != nil {
+					log.Errorln("json unmarshal failed, err:", err)
+				}
+				log.Println("Addr=", slot)
+				for _, v := range r.Slots {
+					if slot.ID == v.ID {
+						v = &slot
+					}
+				}
+			case clientv3.EventTypeDelete:
+				log.Println("EventTypeDelete :")
+			default:
+				log.Println("defult :", ev.Kv)
+
+			}
+
+		}
+	}
+}
+
+func (e *Etcdx) LoadAll(r *proxy.Router) {
+	e.LoadNodes(r)
+	e.LoadSlots(r)
+	go e.WatchNodes(r)
+	go e.WatchSlots(r)
+}
+
 func RegProxy() {
 
 }
+

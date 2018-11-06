@@ -13,4 +13,6 @@ type Registry interface {
 	InitSlots(r *proxy.Router)
 	ClearSlots()
 	Close()
+	WatchNodes(r *proxy.Router)
+	LoadAll(r *proxy.Router)
 }

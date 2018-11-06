@@ -13,7 +13,7 @@ type Node struct {
 	MaxIdle   int    `json:"MaxIdle"`
 	MaxActive int    `json:"MaxActive"`
 	conn      *redis.Conn
-	proc      *Processor
+	processor *Processor
 }
 
 //创建连接，每个node一个连接
@@ -35,10 +35,16 @@ func (n *Node) BuildConn() (error) {
 func (n *Node) buildProcessor() {
 	d := NewProcessor(n.conn)
 	go d.Start()
-	n.proc = d
+	n.processor = d
 }
 
 // TODO
 func (n *Node) keepAlive() {
 
+}
+
+func (n *Node) Close() {
+	//TODO 此处应该检查是否还有属于此Node的slot
+	n.processor.Stop()
+	n.conn.Close()
 }

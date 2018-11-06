@@ -5,25 +5,10 @@ import (
 	"saber/proxy"
 	"fmt"
 	"github.com/coreos/etcd/clientv3"
-	"time"
+	"log"
+	"golang.org/x/net/context"
 )
 
-func newEtcdx() *Etcdx {
-	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{"127.0.0.1:2379"},
-		DialTimeout: 5 * time.Second,
-	})
-	if err != nil {
-		fmt.Println("connect failed, err:", err)
-		return nil
-	}
-
-	fmt.Println("connect etcd succuess ")
-	//defer CLi.Close()
-	r := &Etcdx{cli}
-
-	return r
-}
 
 func TestEtcdx_LoadNodes(t *testing.T) {
 	//o := utils.GetConf()
@@ -38,15 +23,15 @@ func TestEtcdx_LoadNodes(t *testing.T) {
 }
 
 func TestEtcdx_AddNode(t *testing.T) {
-	ex := newEtcdx()
+	ex := NewRegistryByPath("../config.toml")
 
 	defer ex.Close()
 	n := &proxy.Node{
-		ID:        "2",
-		Addr:      "127.0.0.1:6382",
-		Status:    1,
-		MaxIdle:   10,
-		MaxActive: 3,
+		ID:        "3",
+		Addr:      "127.0.0.1:6383",
+		Status:    0,
+		MaxIdle:   9,
+		MaxActive: 11,
 	}
 	//n.BuildConn()
 	ex.AddNode(n)
@@ -76,4 +61,20 @@ func TestEtcdx_ClearSlots(t *testing.T) {
 	ex := NewRegistryByPath("../config.toml")
 	defer ex.Close()
 	ex.ClearSlots()
+}
+
+func TestEtcdx_WatchNodes(t *testing.T) {
+	cli, err := clientv3.New(clientv3.Config{
+		Endpoints: []string{"127.0.0.1:2379"},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rch := cli.Watch(context.Background(), "/saber/nodes/3", clientv3.WithPrefix())
+	wresp := <-rch
+	fmt.Printf("wresp.Header.Revision: %d\n", wresp.Header.Revision)
+	fmt.Println("wresp.IsProgressNotify:", wresp.IsProgressNotify())
+	// wresp.Header.Revision: 0
+	// wresp.IsProgressNotify: true
 }

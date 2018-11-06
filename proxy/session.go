@@ -71,7 +71,7 @@ func handleRequest(t *task, router *Router) {
 	default:
 		//根据muti获取slot
 		resp := t.Multi[1]
-		p := router.GetSlot(resp.Value).Node.proc
+		p := router.GetSlot(resp.Value).Node.processor
 		//传递到processor通道
 		p.input <- t
 	}

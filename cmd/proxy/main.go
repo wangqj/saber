@@ -25,9 +25,8 @@ func main() {
 	defer e.Close()
 	//初始化
 	r := &proxy.Router{}
-	e.LoadNodes(r)
-	e.LoadSlots(r)
-	log.Println("slot count :", len(r.Slots))
+	e.LoadAll(r)
+	log.Println("node count : ", len(r.Nodes), "; slot count :", len(r.Slots))
 
 	//启动服务
 	p := proxy.NewProxy(r)

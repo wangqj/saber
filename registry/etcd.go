@@ -102,7 +102,7 @@ func (e *Etcdx) LoadNodes(r *proxy.Router) {
 
 func (e *Etcdx) LoadSlots(r *proxy.Router) {
 	//设置1秒超时，访问etcd有超时控制
-	ctx, _ := context.WithTimeout(context.Background(), time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
 	resp, err := e.CLi.Get(ctx, "/saber/slots/", clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 	if err != nil {
 		log.Errorln("get slots failed, err:", err)
@@ -267,9 +267,32 @@ func (e *Etcdx) LoadAll(r *proxy.Router) {
 	e.LoadSlots(r)
 	go e.WatchNodes(r)
 	go e.WatchSlots(r)
+	e.RegProxy()
 }
 
-func RegProxy() {
-
+//注册proxy
+func (e *Etcdx) RegProxy() {
+	grantResp, err := e.CLi.Grant(context.TODO(), 10)
+	if err != nil {
+		log.Errorln(err)
+		return
+	}
+	keepResp, err := e.CLi.Put(context.TODO(), "/saber/proxy/"+proxy.GetPID(), "living", clientv3.WithLease(grantResp.ID))
+	if err != nil {
+		log.Errorln(err)
+		return
+	}
+	log.Println(keepResp)
+	go keepAlive(e, grantResp)
 }
 
+//每隔5秒心跳一次
+func keepAlive(e *Etcdx, grantResp *clientv3.LeaseGrantResponse) {
+	for {
+		time.Sleep(time.Duration(5) * time.Second)
+		_, err := e.CLi.KeepAliveOnce(context.TODO(), grantResp.ID)
+		if err != nil {
+			log.Errorln(err)
+		}
+	}
+}

@@ -7,6 +7,7 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"log"
 	"golang.org/x/net/context"
+	"time"
 )
 
 
@@ -77,4 +78,25 @@ func TestEtcdx_WatchNodes(t *testing.T) {
 	fmt.Println("wresp.IsProgressNotify:", wresp.IsProgressNotify())
 	// wresp.Header.Revision: 0
 	// wresp.IsProgressNotify: true
+}
+
+func TestEtcdx_RegProxy(t *testing.T) {
+	ex := NewRegistryByPath("../config.toml")
+	defer ex.Close()
+	cli, err := clientv3.New(clientv3.Config{
+		Endpoints: []string{"127.0.0.1:2379"},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	for i := 0; i < 20; i++ {
+		time.Sleep(time.Duration(1) * time.Second)
+		resp, _ := cli.Get(context.Background(), "/saber/proxy/"+proxy.GetPID(), clientv3.WithPrefix())
+
+		for _, ev := range resp.Kvs {
+			{
+				fmt.Println(ev.Value)
+			}
+		}
+	}
 }

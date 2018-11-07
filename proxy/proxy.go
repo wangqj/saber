@@ -68,6 +68,11 @@ func (p *Proxy) Start(t time.Time) {
 	}
 }
 
+func GetPID() string {
+	o := utils.GetConf()
+	pid := utils.GetIntranetIp() + ":" + strconv.Itoa(o.Port)
+	return pid
+}
 
 
 

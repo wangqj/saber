@@ -15,4 +15,5 @@ type Registry interface {
 	Close()
 	WatchNodes(r *proxy.Router)
 	LoadAll(r *proxy.Router)
+	RegProxy()
 }

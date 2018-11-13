@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"fmt"
+	"sync"
 )
 
 const SLOT_COUNT int = 16
@@ -20,26 +21,30 @@ type Etcdx struct {
 
 }
 
+var once sync.Once
+var r *Etcdx
 func NewRegistry() Registry {
-	o := utils.GetConf()
-	var addrs []string
-	if strings.Index(o.RegistryAdrr, ",") > 0 {
-		addrs = strings.Split(o.RegistryAdrr, ",")
-	} else {
-		addrs = append(addrs, o.RegistryAdrr)
-	}
-	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   addrs,
-		DialTimeout: 5 * time.Second,
-	})
-	if err != nil {
-		log.Println("connect failed, err:", err)
-		return nil
-	}
+	once.Do(func() {
+		o := utils.GetConf()
+		var addrs []string
+		if strings.Index(o.RegistryAdrr, ",") > 0 {
+			addrs = strings.Split(o.RegistryAdrr, ",")
+		} else {
+			addrs = append(addrs, o.RegistryAdrr)
+		}
+		cli, err := clientv3.New(clientv3.Config{
+			Endpoints:   addrs,
+			DialTimeout: 5 * time.Second,
+		})
+		if err != nil {
+			log.Println("connect failed, err:", err)
+		}
 
-	log.Println("connect etcd succuess ")
-	//defer CLi.Close()
-	r := &Etcdx{cli}
+		log.Println("connect etcd succuess ")
+		//defer CLi.Close()
+		r = &Etcdx{cli}
+	})
+
 	return r
 }
 

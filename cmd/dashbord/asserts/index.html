@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+
+    <script src="https://cdn.bootcss.com/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <!-- 引入 echarts.js -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/echarts/4.1.0/echarts.min.js"></script>
+
+</head>
+<body>
+<div class="container">
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="width: 600px;height:400px;"></div>
+    <!-- 按钮触发模态框 -->
+
+    <button class="btn btn-outline-success btn-sm flex-end" data-toggle="modal" data-target="#myModal">
+        添加Redis服务
+    </button>
+
+    <!-- 模态框（Modal） -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        模态框（Modal）标题
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    点击关闭按钮检查事件功能。
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        关闭
+                    </button>
+                    <button type="button" class="btn btn-primary">
+                        提交更改
+                    </button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+</div>
+<script type="text/javascript">
+    $(function () {
+        $('#myModal').modal('hide')
+    });
+</script>
+<script type="text/javascript">
+    $(function () {
+        $('#myModal').on('hide.bs.modal', function () {
+            alert('嘿，我听说您喜欢模态框...');
+        })
+    });
+</script>
+<script type="text/javascript">
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('main'));
+
+    slots = $.ajax({
+        url: "/slots",
+
+        success: function (result) {
+            var rr = jQuery.parseJSON(eval(slots.responseText));
+            var nodes = rr.Nodes;
+            var xd = new Array();
+
+            $.each(nodes, function (index, item) {
+                xd[index] = item.Addr;
+            });
+            var sd = new Array(xd.length);
+            $.each(rr.Slots, function (si, st) {
+                $.each(nodes, function (index, item) {
+                    if (st.NID == item.ID) {
+                        if (sd[index] == undefined) {
+                            sd[index] = 0
+                        }
+                        sd[index]++;
+                    }
+                });
+            });
+
+            // 指定图表的配置项和数据
+            var option = {
+                color: 'green',
+                title: {
+                    text: 'slot分布图'
+                },
+                tooltip: {},
+                legend: {
+                    data: ['数量']
+                },
+                xAxis: {
+                    data: xd
+                },
+                yAxis: {},
+                series: [{
+                    name: '数量',
+                    type: 'bar',
+                    data: sd
+                }]
+            };
+
+            // 使用刚指定的配置项和数据显示图表。
+            myChart.setOption(option);
+            // $( "#dd" ).html( "<strong>" +eval(slots.responseText) + "</strong> degrees" );
+        }
+    });
+    // $("#toggle").click(function(){
+    //     htmlobj= $.ajax({
+    //         url: "/a",
+    //         data: {
+    //             zipcode: 97201
+    //         },
+    //         success: function( result ) {
+    //             $( "#dd" ).html( "<strong>" + htmlobj.responseText+ "</strong> degrees" );
+    //         }
+    //     });
+    // });
+
+</script>
+</body>
+</html>

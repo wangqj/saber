@@ -19,7 +19,11 @@ var once sync.Once
 //读取本地配置文件TODO
 
 func GetConf() (*Option) {
-	GetConfByPath("config.toml")
+	if option != nil {
+		return option
+	} else {
+		GetConfByPath("config.toml")
+	}
 	return option
 }
 

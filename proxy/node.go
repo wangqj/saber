@@ -12,6 +12,7 @@ type Node struct {
 	Status    int    `json:"Status"`
 	MaxIdle   int    `json:"MaxIdle"`
 	MaxActive int    `json:"MaxActive"`
+	SlotCount int    `json:"SlotCount"`
 	conn      *redis.Conn
 	processor *Processor
 }

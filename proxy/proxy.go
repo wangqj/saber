@@ -30,7 +30,7 @@ func NewProxy(r *Router) *Proxy {
 	return s
 }
 
-//启动proxy
+//启动proxy one loop per thread
 func (p *Proxy) Start(t time.Time) {
 	p.mu.Lock()
 	defer p.mu.Unlock()

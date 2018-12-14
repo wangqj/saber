@@ -21,7 +21,7 @@ type Proxy struct {
 }
 
 func NewProxy(r *Router) *Proxy {
-	o := utils.GetConf()
+	o := utils.Cfg
 	s := &Proxy{}
 	s.router = r
 	s.status = 1
@@ -69,7 +69,7 @@ func (p *Proxy) Start(t time.Time) {
 }
 
 func GetPID() string {
-	o := utils.GetConf()
+	o := utils.Cfg
 	pid := utils.GetIntranetIp() + ":" + strconv.Itoa(o.Port)
 	return pid
 }

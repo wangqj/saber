@@ -16,7 +16,7 @@ type Processor struct {
 }
 
 func NewProcessor(conn *redis.Conn) *Processor {
-	o := utils.GetConf()
+	o := utils.Cfg
 	log.Println("init Processor ", o.SessionBuffer)
 	instance := &Processor{
 		input: make(chan *task, o.SessionBuffer),

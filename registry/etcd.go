@@ -25,7 +25,7 @@ var once sync.Once
 var r *Etcdx
 func NewRegistry() Registry {
 	once.Do(func() {
-		o := utils.GetConf()
+		o := utils.Cfg
 		var addrs []string
 		if strings.Index(o.RegistryAdrr, ",") > 0 {
 			addrs = strings.Split(o.RegistryAdrr, ",")
@@ -49,7 +49,7 @@ func NewRegistry() Registry {
 }
 
 func NewRegistryByPath(path string) Registry {
-	o := utils.GetConfByPath(path)
+	o := utils.Cfg
 	var addrs []string
 	if strings.Index(o.RegistryAdrr, ",") > 0 {
 		addrs = strings.Split(o.RegistryAdrr, ",")

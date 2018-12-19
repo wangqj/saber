@@ -6,10 +6,9 @@ package redis
 import (
 	"net"
 	"time"
-
-	"github.com/CodisLabs/codis/pkg/utils/bufio2"
-	"github.com/CodisLabs/codis/pkg/utils/errors"
-	"github.com/CodisLabs/codis/pkg/utils/unsafe2"
+	"saber/utils/errors"
+	"saber/utils/unsafe2"
+	"saber/utils/bufio2"
 )
 
 type Conn struct {

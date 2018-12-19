@@ -9,8 +9,7 @@ import (
 	"io"
 	"strings"
 	"testing"
-
-	"github.com/CodisLabs/codis/pkg/utils/assert"
+	"saber/utils/assert"
 )
 
 func newReader(n int, input string) *Reader {

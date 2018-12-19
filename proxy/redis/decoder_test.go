@@ -6,8 +6,7 @@ package redis
 import (
 	"bytes"
 	"testing"
-
-	"github.com/CodisLabs/codis/pkg/utils/assert"
+	"saber/utils/assert"
 )
 
 func TestBtoi64(t *testing.T) {

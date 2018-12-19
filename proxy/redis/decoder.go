@@ -7,9 +7,8 @@ import (
 	"bytes"
 	"io"
 	"strconv"
-
-	"github.com/CodisLabs/codis/pkg/utils/bufio2"
-	"github.com/CodisLabs/codis/pkg/utils/errors"
+	"saber/utils/bufio2"
+	"saber/utils/errors"
 )
 
 var (
